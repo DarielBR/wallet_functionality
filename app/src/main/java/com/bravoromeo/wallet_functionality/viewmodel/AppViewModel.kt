@@ -54,6 +54,75 @@ class AppViewModel (
             "id": "$issuerId.$passId",
             "classId": "$passClass",
             "genericType": "GENERIC_TYPE_UNSPECIFIED",
+            "hexBackgroundColor": "#001C83",
+            "cardTitle": {
+              "defaultValue": {
+                "language": "es",
+                "value": "GRUPO Diusframi"
+              }
+            },
+            "subheader": {
+              "defaultValue": {
+                "language": "es",
+                "value": "DEMO WALLET PASS"
+              }
+            },
+            "header": {
+              "defaultValue": {
+                "language": "es",
+                "value": "MUESTRA PARA PRUEBA"
+              }
+            },
+            "barcode": {
+              "type": "QR_CODE",
+              "value": "$passId"
+            },
+            "heroImage": {
+              "sourceUri": {
+                "uri": "https://www.diusframi.es/wp-content/uploads/2022/03/logo_dius_color.png"
+              }
+            },
+            "textModulesData": [
+              {
+                "header": "CAMPO1",
+                "body": "${Random.nextInt(0, 9999)}",
+                "id": "points"
+              },
+              {
+                "header": "CAMPO2",
+                "body": "${Random.nextInt(1, 99)}",
+                "id": "contacts"
+              }
+            ]
+          }
+        ]
+      }
+    }
+    """
+    fun savePassToWallet(){
+        walletClient.savePasses(newObjectJson, activity, appState.addToGoogleWalletRequestCode)
+    }
+}
+
+data class AppState (
+    var isWalletAvailable: Boolean = false,
+    var addToGoogleWalletRequestCode: Int = 999
+)
+
+/*
+private val newObjectJson = """
+    {
+      "iss": "$issuerEmail",
+      "aud": "google",
+      "typ": "savetowallet",
+      "iat": ${Date().time / 1000L},
+      "origins": [],
+      "payload": {
+        "genericObjects": [
+          {
+            "id": "$issuerId.$passId",
+            "classId": "$passClass",
+            "genericType": "GENERIC_TYPE_UNSPECIFIED",
             "hexBackgroundColor": "#4285f4",
             "logo": {
               "sourceUri": {
@@ -103,13 +172,4 @@ class AppViewModel (
         ]
       }
     }
-    """
-    fun savePassToWallet(){
-        walletClient.savePasses(newObjectJson, activity, appState.addToGoogleWalletRequestCode)
-    }
-}
-
-data class AppState (
-    var isWalletAvailable: Boolean = false,
-    var addToGoogleWalletRequestCode: Int = 999
-)
+    """*/
