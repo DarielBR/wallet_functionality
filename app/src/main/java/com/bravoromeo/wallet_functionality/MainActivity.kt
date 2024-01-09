@@ -21,11 +21,9 @@ import com.bravoromeo.wallet_functionality.ui.theme.Wallet_functionalityTheme
 import com.bravoromeo.wallet_functionality.viewmodel.AppViewModel
 
 class MainActivity : ComponentActivity() {
-
-    val viewModel = AppViewModel(activity = this)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        val viewModel = AppViewModel(activity = this)
         setContent {
             Wallet_functionalityTheme {
                 // A surface container using the 'background' color from the theme
@@ -39,10 +37,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    /*override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         //TODO Handle result here
-    }
+    }*/
 }
 
 @Composable

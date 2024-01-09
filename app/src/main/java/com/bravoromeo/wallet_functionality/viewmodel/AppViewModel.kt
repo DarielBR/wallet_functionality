@@ -24,7 +24,7 @@ class AppViewModel (
         fetchWalletApiStatus()
     }
 
-    fun fetchWalletApiStatus(){
+    private fun fetchWalletApiStatus(){
         walletClient.getPayApiAvailabilityStatus(PayClient.RequestType.SAVE_PASSES)
             .addOnSuccessListener {status ->
                 if (status == PayApiAvailabilityStatus.AVAILABLE)appState = appState.copy(isWalletAvailable = true)
