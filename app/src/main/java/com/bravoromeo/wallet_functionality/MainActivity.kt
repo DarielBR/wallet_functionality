@@ -58,7 +58,7 @@ fun Greeting(
             modifier=modifier
                 .padding(bottom = 12.dp)
         )
-        if (viewModel?.appState?.isWalletAvailable ?: false) WalletButton { viewModel?.savePassToWallet() }
+        if (viewModel?.appState?.isWalletAvailable ?: true) WalletButton { viewModel?.savePassToWallet() }
     }
 }
 
