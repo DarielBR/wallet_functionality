@@ -1,7 +1,10 @@
 package com.bravoromeo.wallet_functionality
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
@@ -19,11 +22,16 @@ import androidx.compose.ui.unit.dp
 import com.bravoromeo.wallet_functionality.ui.elements.WalletButton
 import com.bravoromeo.wallet_functionality.ui.theme.Wallet_functionalityTheme
 import com.bravoromeo.wallet_functionality.viewmodel.AppViewModel
+import com.google.android.gms.pay.Pay
+import com.google.android.gms.pay.PayClient
 
 class MainActivity : ComponentActivity() {
+    private lateinit var walletClient: PayClient
+    private val addToGoogleWalletRequestCode: Int = 1000
     override fun onCreate(savedInstanceState: Bundle?) {
+        walletClient = Pay.getClient(this)
         super.onCreate(savedInstanceState)
-        val viewModel = AppViewModel(activity = this)
+        val viewModel = AppViewModel(walletClient = walletClient, requestCode = addToGoogleWalletRequestCode)
         setContent {
             Wallet_functionalityTheme {
                 // A surface container using the 'background' color from the theme
@@ -31,22 +39,44 @@ class MainActivity : ComponentActivity() {
                     modifier=Modifier.fillMaxSize(),
                     color=MaterialTheme.colorScheme.background
                 ) {
-                    Greeting(viewModel = viewModel)
+                    Greeting(
+                        viewModel = viewModel,
+                        activity = this
+                    )
                 }
             }
         }
     }
 
-    /*override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        //TODO Handle result here
-    }*/
+        if(requestCode == addToGoogleWalletRequestCode){
+            when (resultCode){
+                RESULT_OK -> {
+                    //TODO show Toast with a Success message
+                    Toast.makeText(this, "Pass successfully saved to Google Wallet!", Toast.LENGTH_SHORT).show()
+                }
+                RESULT_CANCELED -> {
+                    //TODO show Toast with a Cancelled by User message
+                    Toast.makeText(this, "Action cancelled by user. No pass added to wallet.", Toast.LENGTH_LONG).show()
+                }
+                PayClient.SavePassesResult.SAVE_ERROR -> data?.let{intentData ->
+                    val errorMessage = intentData.getStringExtra(PayClient.EXTRA_API_ERROR_MESSAGE)
+                    Log.e("SavePassResult", errorMessage.toString())
+                }
+                else -> {
+                    Log.e("SavePassResult", "Unknown error")
+                }
+            }
+        }
+    }
 }
 
 @Composable
 fun Greeting(
     modifier: Modifier = Modifier,
-    viewModel: AppViewModel? = null
+    viewModel: AppViewModel? = null,
+    activity: Activity? = null
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -58,7 +88,12 @@ fun Greeting(
             modifier=modifier
                 .padding(bottom = 12.dp)
         )
-        if (viewModel?.appState?.isWalletAvailable ?: true) WalletButton { viewModel?.savePassToWallet() }
+        if (viewModel?.appState?.isWalletAvailable ?: true) WalletButton {
+            if (activity != null) {
+                viewModel?.savePassToWallet(activity = activity)
+                //viewModel?.updateClassAtWallet(activity = activity)
+            }
+        }
     }
 }
 
