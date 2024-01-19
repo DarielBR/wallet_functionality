@@ -85,10 +85,6 @@ class WalletRepository() {
             return
         }
 
-        /*val googleCredentials = GoogleCredentials.fromStream(inputStream)//originally keyFilePath
-            .createScoped(walletApiConfig.walletScopes)
-        googleCredentials.refreshIfExpired()*/
-
         val httpClient = OkHttpClient.Builder()
             .addInterceptor { chain ->
                 val originalRequest = chain.request()
