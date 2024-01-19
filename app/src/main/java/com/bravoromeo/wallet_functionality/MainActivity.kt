@@ -1,16 +1,25 @@
 package com.bravoromeo.wallet_functionality
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresExtension
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,6 +37,7 @@ import com.google.android.gms.pay.PayClient
 class MainActivity : ComponentActivity() {
     private lateinit var walletClient: PayClient
     private val addToGoogleWalletRequestCode: Int = 1000
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     override fun onCreate(savedInstanceState: Bundle?) {
         walletClient = Pay.getClient(this)
         super.onCreate(savedInstanceState)
@@ -41,6 +51,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Greeting(
                         viewModel = viewModel,
+                        context = this,
                         activity = this
                     )
                 }
@@ -72,10 +83,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
 fun Greeting(
     modifier: Modifier = Modifier,
     viewModel: AppViewModel? = null,
+    context: Context? = null,
     activity: Activity? = null
 ) {
     Column(
@@ -83,11 +96,17 @@ fun Greeting(
         verticalArrangement = Arrangement.Center,
         modifier = modifier.fillMaxSize()
     ){
-        Text(
-            text="Hello!",
-            modifier=modifier
-                .padding(bottom = 12.dp)
-        )
+        Button(onClick = { viewModel?.createDemoClass2(context = context!!) }) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .padding(0.dp)
+            ) {
+                Image(imageVector = Icons.Default.Menu, contentDescription = "")
+                Text(text = "Crear nueva clase generica modo demo")
+            }
+        }
         if (viewModel?.appState?.isWalletAvailable ?: true) WalletButton {
             if (activity != null) {
                 viewModel?.savePassToWallet(activity = activity)
@@ -97,6 +116,7 @@ fun Greeting(
     }
 }
 
+@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Preview(showBackground=true)
 @Composable
 fun GreetingPreview() {

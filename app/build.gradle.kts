@@ -44,7 +44,9 @@ android {
     }
     packaging {
         resources {
+            excludes+="META-INF/DEPENDENCIES"
             excludes+="/META-INF/{AL2.0,LGPL2.1}"
+
         }
     }
 }
@@ -67,6 +69,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
+    //Kotlin coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
 
     //google play services integration
     implementation("com.google.android.gms:play-services-pay:16.4.0")
@@ -76,17 +80,16 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     //Google Okhttp3 library to access Wallet API REST
     implementation("com.squareup.okhttp3:okhttp:4.9.1")
-    implementation("com.squareup.okhttp3:okhttp-oauth:4.9.1")
+    //implementation("com.squareup.okhttp3:okhttp-oauth:4.9.1")
     //Google OAuth2 library. Necessary for authentication to the Wallet REST API
     implementation ("com.auth0:java-jwt:3.19.1")
     implementation ("com.auth0:jwks-rsa:0.9.0")
     implementation ("com.fasterxml.jackson.core:jackson-databind:2.13.4.2")
     implementation ("com.google.apis:google-api-services-oauth2:v2-rev20200213-2.0.0")
-    implementation ("com.google.api-client:google-api-client:1.25.0")
+    implementation ("com.google.api-client:google-api-client:2.0.0")
     implementation ("com.google.auth:google-auth-library-oauth2-http:1.10.0")
-    implementation ("com.squareup.okhttp3:okhttp:4.3.1")
     implementation ("javax.json:javax.json-api:1.1")
-    implementation ("org.glassfish:javax.json:1.1")
+    //implementation ("org.glassfish:javax.json:1.1")
     //Google Wallet API Client library
     implementation(files("C:/Users/dbombino/AndroidStudioProjects/research/wallet_functionality/wallet_functionality/app/src/main/java/com/bravoromeo/wallet_functionality/repositories/google_wallet/google-walletobjects-v1-rev_20230821-java.jar"))
 }

@@ -1,13 +1,18 @@
 package com.bravoromeo.wallet_functionality.viewmodel
 
 import android.app.Activity
+import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresExtension
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.bravoromeo.wallet_functionality.repositories.google_wallet.WalletRepository
 import com.google.android.gms.pay.PayApiAvailabilityStatus
 import com.google.android.gms.pay.PayClient
+import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.UUID
 import kotlin.random.Random
@@ -109,6 +114,13 @@ class AppViewModel (
 
     fun savePassToWallet(activity: Activity){
         walletClient.savePasses(newObjectJson, activity, requestCode)
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun createDemoClass2(context: Context){
+        viewModelScope.launch {
+            walletRepository.createGenericClass(context = context) { /*TODO show message via Toast*/ }
+        }
     }
 }
 
