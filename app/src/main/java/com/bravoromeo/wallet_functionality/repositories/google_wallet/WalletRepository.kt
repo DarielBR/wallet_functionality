@@ -100,12 +100,6 @@ class WalletRepository() {
             }
             .build()
 
-        //INTENTAR PRIMERO ESTA VÍA
-        //A PARTIR DE AQUI, USAR EL CLIENTE HTTP CREADO CON CREDENCIALES DE GOOGLE PARA CREAR LA
-        //GENERIC PASS CLASS
-        //SI ESTO FUNCIONA, PODEMOS DEJAR EL APREMDISAJE DE LA VIA SDK PARA MAS ADELANTE: ES MÁS COMPLEJA,
-        //MENOS INTUITIVA.
-
         //Create Json structure for the genericClass
         val genericClass = """
         {
