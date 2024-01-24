@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalComposeUiApi::class)
+
 package com.bravoromeo.wallet_functionality
 
 import android.app.Activity
@@ -16,17 +18,35 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Email
+import androidx.compose.material.icons.twotone.Edit
+import androidx.compose.material.icons.twotone.Email
 import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bravoromeo.wallet_functionality.ui.elements.WalletButton
 import com.bravoromeo.wallet_functionality.ui.theme.Wallet_functionalityTheme
@@ -51,8 +71,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Greeting(
                         viewModel = viewModel,
-                        context = this,
-                        activity = this
+                        context = this
                     )
                 }
             }
@@ -88,31 +107,209 @@ class MainActivity : ComponentActivity() {
 fun Greeting(
     modifier: Modifier = Modifier,
     viewModel: AppViewModel? = null,
-    context: Context? = null,
-    activity: Activity? = null
+    context: Context? = null
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = modifier.fillMaxSize()
     ){
-        Button(onClick = { viewModel?.createDemoClass2(context = context!!) }) {
+        Divider(
+            thickness = Dp.Hairline,
+            modifier = modifier
+                .padding(horizontal = 24.dp)
+                .padding(vertical = 8.dp)
+        )
+
+        Button(
+            onClick = { viewModel?.createDemoClass2(context = context!!) },
+            modifier = modifier
+                .width(300.dp)
+        ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .padding(0.dp)
             ) {
-                Image(imageVector = Icons.Default.Menu, contentDescription = "")
-                Text(text = "Crear nueva clase generica modo demo")
+                Image(
+                    imageVector = Icons.Default.Create,
+                    contentDescription = ""
+                )
+                Text(
+                    text = "Crear nueva clase generica modo demo",
+                    textAlign = TextAlign.Center,
+                    modifier = modifier
+                        .padding(start = 4.dp)
+                )
             }
         }
-        if (viewModel?.appState?.isWalletAvailable ?: true) WalletButton {
-            if (activity != null) {
-                viewModel?.savePassToWallet(activity = activity)
-                //viewModel?.updateClassAtWallet(activity = activity)
+        Button(
+            onClick = { viewModel?.updateDemoClass2(context = context!!) },
+            modifier = modifier
+                .width(300.dp)
+                .padding(vertical = 8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .padding(0.dp)
+            ) {
+                Image(imageVector = Icons.Outlined.Edit, contentDescription = "")
+                Text(
+                    text = "Modificar clase Generica modo demo",
+                    textAlign = TextAlign.Center,
+                    modifier = modifier
+                        .padding(start = 4.dp)
+                )
             }
         }
+        if (viewModel?.appState?.isWalletAvailable ?: true) {
+            WalletButton {
+                if (context != null) {
+                    viewModel?.savePassToWallet(context = context)
+                }
+            }
+        }
+        Divider(
+            thickness = Dp.Hairline,
+            modifier = modifier
+                .padding(horizontal = 24.dp)
+                .padding(vertical = 8.dp)
+        )
+        Button(
+            onClick = { viewModel?.createLoyaltyDemoClass(context = context!!) },
+            modifier = modifier
+                .width(300.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .padding(0.dp)
+            ) {
+                Image(imageVector = Icons.Default.Create, contentDescription = "")
+                Text(
+                    text = "Crear nueva clase Fidelidad modo demo",
+                    textAlign = TextAlign.Center,
+                    modifier = modifier
+                        .padding(start = 4.dp)
+                )
+            }
+        }
+
+        Button(
+            onClick = { viewModel?.updateLoyaltyDemoClass(context = context!!) },
+            modifier = modifier
+                .width(300.dp)
+                .padding(vertical = 8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .padding(0.dp)
+            ) {
+                Image(imageVector = Icons.Outlined.Edit, contentDescription = "")
+                Text(
+                    text = "Modificar clase Fidelidad modo demo",
+                    textAlign = TextAlign.Center,
+                    modifier = modifier
+                        .padding(start = 4.dp)
+                )
+            }
+        }
+        Button(
+            onClick = { viewModel?.addMessageToLoyaltyClass(context = context!!) },
+            modifier = modifier
+                .width(300.dp)
+                .padding(bottom = 8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .padding(0.dp)
+            ) {
+                Image(imageVector = Icons.Default.Email, contentDescription = "")
+                Text(
+                    text = "Agregar mensaje a clase Fidelidad modo demo",
+                    textAlign = TextAlign.Center,
+                    modifier = modifier
+                        .padding(start = 4.dp)
+                )
+            }
+        }
+        Button(
+            onClick = { viewModel?.addMessageToLoyaltyPass(
+                context = context!!,
+                passId = viewModel.appState.currentLoyaltyPassId
+            ) },
+            modifier = modifier
+                .width(300.dp)
+                .padding(bottom = 8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .padding(0.dp)
+            ) {
+                Image(imageVector = Icons.TwoTone.Email, contentDescription = "")
+                Text(
+                    text = "Agregar mensaje a pase Fidelidad modo demo",
+                    textAlign = TextAlign.Center,
+                    modifier = modifier
+                        .padding(start = 4.dp)
+                )
+            }
+        }
+        Button(
+            onClick = { viewModel?.updateLoyaltyPass(
+                context = context!!,
+                passId = viewModel.appState.currentLoyaltyPassId
+            ) },
+            modifier = modifier
+                .width(300.dp)
+                .padding(bottom = 8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .padding(0.dp)
+            ) {
+                Image(imageVector = Icons.TwoTone.Edit, contentDescription = "")
+                Text(
+                    text = "Modificar pase Fidelidad modo demo",
+                    textAlign = TextAlign.Center,
+                    modifier = modifier
+                        .padding(start = 4.dp)
+                )
+            }
+        }
+        val keyboardController = LocalSoftwareKeyboardController.current//Experimental API
+        OutlinedTextField(
+            value = viewModel?.appState?.currentLoyaltyPassId ?: "",
+            onValueChange = { viewModel?.onCurrentLoyaltyPassIdChange(newValue = it) },
+            keyboardActions = KeyboardActions(onDone = { keyboardController?.hide() }),
+            modifier = modifier
+                .padding(bottom = 8.dp)
+        )
+        if (viewModel?.appState?.isWalletAvailable ?: true) {
+            WalletButton {
+                if (context != null) {
+                    viewModel?.saveLoyaltyPassToWallet(context = context)
+                }
+            }
+        }
+        Divider(
+            thickness = Dp.Hairline,
+            modifier = modifier
+                .padding(horizontal = 24.dp)
+                .padding(vertical = 8.dp)
+        )
     }
 }
 

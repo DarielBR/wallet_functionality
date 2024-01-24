@@ -5,10 +5,12 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresExtension
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.internal.composableLambdaInstance
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bravoromeo.wallet_functionality.repositories.google_wallet.WalletApiConfig
 import com.bravoromeo.wallet_functionality.repositories.google_wallet.WalletRepository
 import com.google.android.gms.pay.PayApiAvailabilityStatus
 import com.google.android.gms.pay.PayClient
@@ -112,8 +114,28 @@ class AppViewModel (
     }
     """
 
-    fun savePassToWallet(activity: Activity){
-        walletClient.savePasses(newObjectJson, activity, requestCode)
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun savePassToWallet(context: Context){
+        //val unsignedJWT = walletRepository.createUnsignedJWT("", context)
+        val unsignedJWT = walletRepository.createPassAndUnsignedJWT("0987654321-qwertyuiop")
+        if (unsignedJWT != null) {
+            val activity = context as? Activity
+            if (activity != null){
+                walletClient.savePasses(unsignedJWT, activity, requestCode)
+            }
+        }
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun saveLoyaltyPassToWallet(context: Context){
+        //val unsignedJWT = walletRepository.createUnsignedJWT("", context)
+        val unsignedJWT = walletRepository.createLoyaltyPassAndUnsignedJWT(appState.currentLoyaltyPassId)
+        if (unsignedJWT != null) {
+            val activity = context as? Activity
+            if (activity != null){
+                walletClient.savePasses(unsignedJWT, activity, requestCode)
+            }
+        }
     }
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
@@ -122,10 +144,59 @@ class AppViewModel (
             walletRepository.createGenericClass(context = context) { /*TODO show message via Toast*/ }
         }
     }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun createLoyaltyDemoClass(context: Context){
+        viewModelScope.launch {
+            walletRepository.createLoyaltyDemoClass(context = context) { /*TODO show message via Toast*/ }
+        }
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun updateDemoClass2(context: Context){
+        viewModelScope.launch {
+            walletRepository.updateGenericClass(context = context){/*TODO show message via Toast*/}
+        }
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun updateLoyaltyDemoClass(context: Context){
+        viewModelScope.launch {
+            walletRepository.updateLoyaltyClass(context = context){/*TODO idem*/}
+        }
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun updateLoyaltyPass(passId: String, context: Context){
+        viewModelScope.launch {
+            walletRepository.updateLoyaltyPass(context = context, passId = passId){}
+        }
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun addMessageToLoyaltyClass(context: Context){
+        viewModelScope.launch {
+            walletRepository.addMessageToLoyaltyClass(context = context){/*TODO: idem*/}
+        }
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun addMessageToLoyaltyPass(context: Context, passId: String){
+        viewModelScope.launch {
+            walletRepository.addMessageToLoyaltyPass(passId = passId, context = context){/*TODO: idem*/}
+        }
+    }
+
+    /*region State Handling*/
+    fun onCurrentLoyaltyPassIdChange(newValue: String){
+        appState = appState.copy(currentLoyaltyPassId = newValue)
+    }
+    /*endregion*/
 }
 
 data class AppState (
     var isWalletAvailable: Boolean = false,
+    var currentLoyaltyPassId: String = "loyalty-1234567890"
 
 )
 /*
