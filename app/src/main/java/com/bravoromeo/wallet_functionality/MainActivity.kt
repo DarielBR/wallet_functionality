@@ -2,7 +2,6 @@
 
 package com.bravoromeo.wallet_functionality
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -21,15 +20,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.MailOutline
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.Email
+import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material.icons.twotone.Email
 import androidx.compose.material3.Button
@@ -42,7 +36,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -102,6 +95,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
 fun Greeting(
@@ -302,6 +296,27 @@ fun Greeting(
                 if (context != null) {
                     viewModel?.saveLoyaltyPassToWallet(context = context)
                 }
+            }
+        }
+        Button(
+            onClick = { viewModel?.expireLoyaltyPass(context = context!!) },
+            modifier = modifier
+                .width(300.dp)
+                .padding(vertical = 4.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .padding(0.dp)
+            ) {
+                Image(imageVector = Icons.TwoTone.Delete, contentDescription = "")
+                Text(
+                    text = "Expirar pase Fidelidad modo demo",
+                    textAlign = TextAlign.Center,
+                    modifier = modifier
+                        .padding(start = 4.dp)
+                )
             }
         }
         Divider(

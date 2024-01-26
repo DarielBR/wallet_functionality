@@ -11,6 +11,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -213,42 +214,42 @@ class WalletRepository() {
     fun demoClassJson(classId: String): String{
         val result = """
         {
-          "id": "$classId",
-          "enableSmartTap": 1,
-          "redemptionIssuers": ['3388000000022308286'],
-          "multipleDevicesAndHoldersAllowedStatus": 'ONE_USER_ALL_DEVICES',
-          "classTemplateInfo": {
-            "cardTemplateOverride": {
-              "cardRowTemplateInfos": [
-                {
-                  "oneItem": {
-                    "item": {
-                      "firstValue": {
-                        "fields": [
-                          {
-                            "fieldPath": "object.textModulesData['id']",
-                          },
-                        ],
-                      },
-                    },
-                  },
-                },
-                {
-                  "oneItem": {
-                    "item": {
-                      "firstValue": {
-                        "fields": [
-                          {
-                            "fieldPath": "object.textModulesData['points']",
-                          },
-                        ],
-                      },
-                    },
-                  },
-                },
-              ],
-            },
-          },
+            "id": "$classId",
+            "enableSmartTap": 1,
+            "redemptionIssuers": ['3388000000022308286'],
+            "multipleDevicesAndHoldersAllowedStatus": 'ONE_USER_ALL_DEVICES',
+            "classTemplateInfo": {
+                "cardTemplateOverride": {
+                    "cardRowTemplateInfos": [
+                        {
+                            "oneItem": {
+                                "item": {
+                                    "firstValue": {
+                                        "fields": [
+                                            {
+                                                "fieldPath": "object.textModulesData['id']",
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "oneItem": {
+                                "item": {
+                                    "firstValue": {
+                                        "fields": [
+                                            {
+                                                "fieldPath": "object.textModulesData['points']",
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
         }
         """
         return result
@@ -800,6 +801,70 @@ class WalletRepository() {
     }
 
     /**
+     * Lists all Loyalty classes created in our Issuer Account at Google Wallet API via REST API Endpoint.
+     * @param onResult a lambda function for retrieve information related to the function result.
+     * @return a list with all classes created for our Issuer Account
+     * @throws HttpException
+     * @see "https://developers.google.com/wallet/reference/rest/v1/loyaltyclass/list"
+     */
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun listLoyaltyClasses(
+        context: Context,
+        onResult: (String) -> Unit
+    ){
+        val inputStream = getInputStream(context)
+        val googleCredentials: GoogleCredentials?
+        if (inputStream != null) {
+            googleCredentials = createGoogleCredentials(inputStream)
+        } else {
+            onResult.invoke("Process failure while creating Google Credentials.")
+            Log.e("Key.Json file", "inputStream is not loading key.json content.")
+            return
+        }
+        val httpClient = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val accessToken = googleCredentials.accessToken.tokenValue
+                val newRequest = chain.request().newBuilder()
+                    .header("Authorization", "Bearer $accessToken")
+                    .build()
+                chain.proceed(newRequest)
+            }
+            .build()
+
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                val url = HttpUrl.Builder()
+                    .scheme("https")
+                    .host("walletobjects.googleapis.com")
+                    .addPathSegment("walletobjects")
+                    .addPathSegment("v1")
+                    .addPathSegment("loyaltyClass")
+                    .addQueryParameter("issuerId", issuerId)
+                    .build()
+                val getRequest = Request.Builder()
+                    .url(url)//.url("${walletApiConfig.baseApiRESTUrl}/loyaltyClass")
+                    .get()
+                    .build()
+                httpClient.newCall(getRequest).execute().use { getResponse ->
+                    if (getResponse.isSuccessful){
+                        onResult.invoke("Success getting the classes: ${getResponse.body}")
+                        Log.e("Google Wallet REST API", "Success getting the classes: ${getResponse.body}.")
+                        return@launch
+                    }else{
+                        onResult.invoke("Failure while getting the Loyalty Classes.")
+                        Log.e("Google Wallet REST API", "Failure while getting the classes: ${getResponse.networkResponse}.")
+                        return@launch
+                    }
+                }
+            } catch (e: HttpException) {
+                onResult.invoke("Failure while fetching list of Loyalty Classes.")
+                Log.e("Google Wallet REST API", "error: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    /**
      * Adds a message to a Loyalty Pass via Google Wallet REST API.
      *
      * @param messageJSON a string with the message data ina json structure.
@@ -875,71 +940,278 @@ class WalletRepository() {
         }
     }
 
+    /**
+     * Expires a Loyalty Pass via Google Wallet REST API. (passes are not quite erased permanently.)
+     *
+     * @param passId receipt of the message.
+     * @param onResult a lambda function for retrieve information related to the function result.
+     * @throws HttpException for Http requests to the API Endpoint.
+     */
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun expireLoyaltyPass(
+        passId: String,
+        context: Context,
+        onResult: (String) -> Unit
+    ){
+        val loyaltyPassId: String = "$issuerId.$passId"
+        val patchString = createLoyaltyPassExpiration(passId)
+
+        val inputStream = getInputStream(context)
+        val googleCredentials: GoogleCredentials?
+        if (inputStream != null) {
+            googleCredentials = createGoogleCredentials(inputStream)
+        } else {
+            onResult.invoke("Process failure while creating Google Credentials.")
+            Log.e("Key.Json file", "inputStream is not loading key.json content.")
+            return
+        }
+        val httpClient = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val accessToken = googleCredentials.accessToken.tokenValue
+                val newRequest = chain.request().newBuilder()
+                    .header("Authorization", "Bearer $accessToken")
+                    .build()
+                chain.proceed(newRequest)
+            }
+            .build()
+
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                val getRequest = Request.Builder()
+                    .url("${walletApiConfig.baseApiRESTUrl}/loyaltyObject/$loyaltyPassId")
+                    .get()
+                    .build()
+                httpClient.newCall(getRequest).execute().use { getResponse ->
+                    if (getResponse.isSuccessful){//Loyalty class exists: message can be send.
+                        val postRequest = Request.Builder()
+                            .url("${walletApiConfig.baseApiRESTUrl}/loyaltyObject/$loyaltyPassId")
+                            .patch(patchString.toRequestBody("application/json".toMediaTypeOrNull()))
+                            .build()
+                        httpClient.newCall(postRequest).execute().use { patchResponse ->
+                            if (patchResponse.isSuccessful){
+                                /*val expirationMessage = createLoyaltyPassMessageExpiration()
+                                val postRequestForMessage = Request.Builder()
+                                    .url("${walletApiConfig.baseApiRESTUrl}/loyaltyObject/$loyaltyPassId/addMessage")
+                                    .post(expirationMessage.toRequestBody("application/json".toMediaTypeOrNull()))
+                                    .build()
+                                httpClient.newCall(postRequestForMessage).execute().use {postResponse ->
+                                    if (postResponse.isSuccessful){
+                                        onResult.invoke("Success on sending expiration message to pass $loyaltyPassId")
+                                        Log.e("Google Wallet REST API", "Success on sending expiration message to pass: ${postResponse.networkResponse}.")
+                                        return@launch
+                                    }else{
+                                        onResult.invoke("Failure on sending expiration message to pass $loyaltyPassId")
+                                        Log.e("Google Wallet REST API", "Failure on sending expiration message to pass: ${postResponse.networkResponse}.")
+                                        return@launch
+                                    }
+                                }*/
+                                onResult.invoke("Success on expiring pass $loyaltyPassId")
+                                Log.e("Google Wallet REST API", "Success on expiring pass: ${patchResponse.networkResponse}.")
+                                return@launch
+                            } else {
+                                onResult.invoke("Failure while expiring pass $loyaltyPassId")
+                                Log.e("Google Wallet REST API", "failure while expiring pass: ${patchResponse.networkResponse}.")
+                                return@launch
+                            }
+                        }
+                    }else{
+                        onResult.invoke("Pass $loyaltyPassId do not exists for the Issuer $issuerId's account.")
+                        Log.e("Google Wallet REST API", "pass do not exists.")
+                        return@launch
+                    }
+                }
+            }catch (e: HttpException){
+                onResult.invoke("Failure while adding message to Loyalty Pass $loyaltyPassId.")
+                Log.e("Google Wallet REST API", "add message error: ${e.localizedMessage}")
+            }
+        }
+    }
+
     private fun demoLoyaltyClassJson(classId: String): String{
         val result = """
         {
-          "id": "$issuerId.$loyaltyClassSuffix",
-          "issuerName": "Grupo Diusframi",
-          "reviewStatus": "UNDER_REVIEW",
-          "programName": "loyalty_demo_program",
-          "multipleDevicesAndHoldersAllowedStatus": "ONE_USER_ALL_DEVICES",
-          "enableSmartTap": 1,
-          "redemptionIssuers": [$issuerId],
-          "securityAnimation": {
-            "animationType": "FOIL_SHIMMER"
-          },
-          "programLogo": {
-            "sourceUri": {
-              "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/logo_color.png"
+            "id": "$issuerId.$loyaltyClassSuffix",
+            "issuerName": "Grupo Diusframi",
+            "reviewStatus": "UNDER_REVIEW",
+            "programName": "loyalty_demo_program",
+            "multipleDevicesAndHoldersAllowedStatus": "ONE_USER_ALL_DEVICES",
+            "enableSmartTap": 1,
+            "redemptionIssuers": ["$issuerId"],
+            "securityAnimation": {
+                "animationType": "FOIL_SHIMMER"
             },
-            "contentDescription": {
-              "defaultValue": {
-                "language": "en-US",
-                "value": "LOGO_IMAGE_DESCRIPTION"
-              }
-            }
-          },
-          "hexBackgroundColor": "#001c83",
-          "heroImage": {
-            "sourceUri": {
-              "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/hero_image.png"
+            "programLogo": {
+                "sourceUri": {
+                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/logo_color.png"
+                },
+                "contentDescription": {
+                    "defaultValue": {
+                        "language": "en-US",
+                        "value": "LOGO_IMAGE_DESCRIPTION"
+                    }
+                }
             },
-            "contentDescription": {
-              "defaultValue": {
-                "language": "en-US",
-                "value": "HERO_IMAGE_DESCRIPTION"
-              }
+            "hexBackgroundColor": "#001c83",
+            "heroImage": {
+                "sourceUri": {
+                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/hero_image.png"
+                },
+                "contentDescription": {
+                    "defaultValue": {
+                        "language": "en-US",
+                        "value": "HERO_IMAGE_DESCRIPTION"
+                    }
+                }
+            },
+            "classTemplateInfo":{
+                "cardTemplateOverride":{
+                    "cardRowTemplateInfos":[
+                        {   
+                            "oneItem":{
+                                "item":{
+                                    "firstValue":{
+                                        "fields":[
+                                            {
+                                                "fieldPath":"object.textModulesData['user_name']"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "oneItem":{
+                                "item":{
+                                    "firstValue":{
+                                        "fields":[
+                                            {
+                                                "fieldPath":"object.textModulesData['points']"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "oneItem":{
+                                "item":{
+                                    "firstValue":{
+                                        "fields":[
+                                            {
+                                                "fieldPath":"object.textModulesData['expiration']"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
             }
-          }
         }
         """.trimIndent()
         return result
     }
 
-    private fun createLoyaltyPass(passObjectId: String, classId: String? = null): String{
+    private fun createLoyaltyPass(
+        passObjectId: String,
+        classId: String? = null,
+        userName: String? = null,
+        points: Int? = null
+    ): String{
         val loyaltyClassId = classId ?: "$issuerId.$loyaltyClassSuffix"
+        val userNameValue = userName ?: "John Doe"
+        val pointsValue = points ?: 10
+
         return """
         {
             "id": "$issuerId.$passObjectId",
-                "classId": "$loyaltyClassId",
-                "state": "ACTIVE",
-                "loyaltyPoints": {
-                  "balance": {
-                    "int": 10
-                  },
-                  "localizedLabel": {
-                    "defaultValue": {
-                      "language": "en-US",
-                      "value": "Puntos de recompensa"
-                    }
+            "classId": "$loyaltyClassId",
+            "state": "ACTIVE",
+            "loyaltyPoints": {
+              "balance": {
+                "int": $points
+              },
+              "localizedLabel": {
+                "defaultValue": {
+                  "language": "en-US",
+                    "value": "Puntos de recompensa"
                   }
+              }
+            },
+            "barcode": {
+              "type": "QR_CODE",
+              "value": "$passObjectId",
+              "alternateText": "$passObjectId"
+            },
+            "groupingInfo": {
+              "sortIndex": 1,
+              "groupingId": "loyalty-05"
+            },
+            "textModulesData": [
+                {
+                    "header": "USER NAME LABEL",
+                    "body": "$userNameValue",
+                    "id": "user_name"
                 },
-                "barcode": {
-                  "type": "QR_CODE",
-                  "value": "$passObjectId",
-                  "alternateText": "$passObjectId"
+                {
+                    "header": "POINTS LABEL",
+                    "body": $pointsValue, 
+                    "id": "points"
                 }
+            ]
         }            
+        """.trimIndent()
+    }
+
+    private fun createMessage(messageId: String, messageBody: String): String{
+        return """
+        {
+            "message": {
+                "header": "MessageHeader",
+                "body": "$messageBody",
+                "id": "$messageId",
+                "messageType": "TEXT"
+            }
+        }
+        """.trimIndent()
+    }
+
+    fun createLoyaltyPassExpiration(
+        passObjectId: String,
+        userName: String? = null
+    ): String{
+        val userNameValue = userName ?: "John Doe"
+        return """
+        {
+            "id": "$issuerId.$passObjectId",
+            "state": "EXPIRED",
+            "textModulesData": [
+                {
+                    "header": "USER NAME LABEL",
+                    "body": "$userNameValue",
+                    "id": "user_name"
+                },
+                {
+                    "header": "EXPIRATION LABEL",
+                    "body": "Expiration info", 
+                    "id": "expiration"
+                }
+            ]
+        }            
+        """.trimIndent()
+    }
+
+    private fun createLoyaltyPassMessageExpiration(): String{
+        return """
+        {
+            "message": {
+                "header": "MESSAGE EXPIRATION HEADER",
+                "body": "This pass has been expired by administrators",
+                "id": "msg_loy_exp_01",
+                "messageType": "TEXT"
+            }
+        }
         """.trimIndent()
     }
 
@@ -956,19 +1228,6 @@ class WalletRepository() {
           }
         }
         """
-    }
-
-    private fun createMessage(messageId: String, messageBody: String): String{
-        return """
-        {
-            "message": {
-                "header": "MessageHeader",
-                "body": "$messageBody",
-                "id": "$messageId",
-                "messageType": "TEXT"
-            }
-        }
-        """.trimIndent()
     }
     /* endregion */
 }

@@ -5,12 +5,10 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresExtension
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.internal.composableLambdaInstance
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bravoromeo.wallet_functionality.repositories.google_wallet.WalletApiConfig
 import com.bravoromeo.wallet_functionality.repositories.google_wallet.WalletRepository
 import com.google.android.gms.pay.PayApiAvailabilityStatus
 import com.google.android.gms.pay.PayClient
@@ -187,9 +185,23 @@ class AppViewModel (
         }
     }
 
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun expireLoyaltyPass(context: Context){
+        viewModelScope.launch{
+            walletRepository.expireLoyaltyPass(passId = appState.currentLoyaltyPassId, context = context){/*TODO idem*/}
+        }
+    }
+
     /*region State Handling*/
     fun onCurrentLoyaltyPassIdChange(newValue: String){
         appState = appState.copy(currentLoyaltyPassId = newValue)
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun listLoyaltyClasses(context: Context){
+        viewModelScope.launch {
+            walletRepository.listLoyaltyClasses(context = context){}
+        }
     }
     /*endregion*/
 }
@@ -199,98 +211,3 @@ data class AppState (
     var currentLoyaltyPassId: String = "loyalty-1234567890"
 
 )
-/*
-private val newObjectJson = """
-    {
-      "iss": "$issuerEmail",
-      "aud": "google",
-      "typ": "savetowallet",
-      "iat": ${Date().time / 1000L},
-      "origins": [],
-      "payload": {
-        "genericObjects": [
-          {
-            "id": "$issuerId.$passId",
-            "classId": "$passClass",
-            "genericType": "GENERIC_TYPE_UNSPECIFIED",
-            "hexBackgroundColor": "#001C83",
-            "cardTitle": {
-              "defaultValue": {
-                "language": "es",
-                "value": "GRUPO Diusframi"
-              }
-            },
-            "subheader": {
-              "defaultValue": {
-                "language": "es",
-                "value": "DEMO WALLET PASS"
-              }
-            },
-            "header": {
-              "defaultValue": {
-                "language": "es",
-                "value": "MUESTRA PARA PRUEBA"
-              }
-            },
-            "barcode": {
-              "type": "QR_CODE",
-              "value": "$passId"
-            },
-            "heroImage": {
-              "sourceUri": {
-                "uri": "https://www.diusframi.es/wp-content/uploads/2022/03/logo_dius_color.png"
-              }
-            },
-            "textModulesData": [
-              {
-                "header": "CAMPO1",
-                "body": "${Random.nextInt(0, 9999)}",
-                "id": "points"
-              },
-              {
-                "header": "CAMPO2",
-                "body": "${Random.nextInt(1, 99)}",
-                "id": "contacts"
-              }
-            ]
-          }
-        ]
-      }
-    }
-    """
-    "genericClasses": [
-          {
-            "id": "$passClass",
-            "classTemplateInfo": {
-              "cardTemplateOverride": {
-                "cardRowTemplateInfos": [
-                  {
-                    "oneItem": {
-                      "item" : {
-                        "firstValue" : {
-                          "fields": [
-                            {
-                              "fieldPath": "object.textModulesData['id']",
-                            }
-                          ]
-                        }
-                      }
-                    },
-                    "oneItem": {
-                      "item": {
-                        "firstValue": {
-                          "fields": [
-                            {
-                              "fieldPath": "object.textModulesDta['points']",
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        ],
-    */
