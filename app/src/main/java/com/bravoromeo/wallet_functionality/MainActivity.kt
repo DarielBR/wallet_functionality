@@ -49,6 +49,11 @@ import com.google.android.gms.pay.PayClient
 
 class MainActivity : ComponentActivity() {
     private lateinit var walletClient: PayClient
+    //val walletOptions = Wallet.WalletOptions.Builder()
+    //    .setEnvironment(WalletConstants.ENVIRONMENT_TEST)
+    //    .build()
+    //val payClient = Wallet.getPaymentsClient(this, walletOptions)
+
     private val addToGoogleWalletRequestCode: Int = 1000
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     override fun onCreate(savedInstanceState: Bundle?) {

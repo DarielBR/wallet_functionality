@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    //id("com.google.gms.google-services")
 }
 
 android {
@@ -73,7 +74,10 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
 
     //google play services integration
-    implementation("com.google.android.gms:play-services-pay:16.4.0")
+    implementation("com.google.android.gms:play-services-pay:16.4.0")//Wallet client
+    //implementation("com.google.android.gms:play-services-wallet:19.3.0-beta01")//Google Pay cliente
+    //implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.1")
+
     //Retrofit and Gson converter for Retrofit. Necessary to use Wallet API
     //CURRENTLY NOT IN USE
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
