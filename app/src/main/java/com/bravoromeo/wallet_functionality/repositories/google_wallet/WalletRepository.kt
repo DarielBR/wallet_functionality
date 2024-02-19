@@ -25,7 +25,7 @@ class WalletRepository() {
     //Define constants
     private val issuerId = "3388000000022308286"
     private val classSuffix = "class_generic_demo_2"
-    private val loyaltyClassSuffix = "class_loyalty_demo_1"
+    private val loyaltyClassSuffix = "class_loyalty_demo_2"
     private val classId = "$issuerId.$classSuffix"
     private val walletApiConfig = WalletApiConfig()
 
@@ -33,7 +33,7 @@ class WalletRepository() {
     /**
      * Access to the Assets Manager to retrieve the key.json file necessary to create credentials
      *
-     * @param context TODO: must be solved using DI (further refactoring).
+     * @param context TODO: must be resolved using DI (further refactoring).
      * @return a key.json file InputStream
      */
     private fun getInputStream(context: Context): InputStream?{
@@ -48,6 +48,7 @@ class WalletRepository() {
 
     /**
      * Creates Google OAuth credentials from a given key in a json format.
+     *
      * @param inputStream containing a json string with a private security key
      * @return GoogleCredentials
      */
@@ -620,6 +621,7 @@ class WalletRepository() {
                         val putRequest = Request.Builder()
                             .url("${walletApiConfig.baseApiRESTUrl}/loyaltyClass/$loyaltyClassId")
                             .put(loyaltyClass.toRequestBody("application/json".toMediaTypeOrNull()))
+                            //.patch(loyaltyClass.toRequestBody("application/json".toMediaTypeOrNull()))
                             .build()
                         httpClient.newCall(putRequest).execute().use { responseToPut ->
                             if (responseToPut.isSuccessful){
@@ -685,7 +687,7 @@ class WalletRepository() {
 
         //Create Json structure for the genericClass
         val loyaltyPassId = "$issuerId.$passId"
-        val loyaltyPass = createLoyaltyPass(passId)
+        val loyaltyPass = createLoyaltyPass(passObjectId = passId, points = 10)
         //Http request wont be allowed in the main thread.
         GlobalScope.launch(Dispatchers.IO){
             try {
@@ -1033,7 +1035,7 @@ class WalletRepository() {
             "id": "$issuerId.$loyaltyClassSuffix",
             "issuerName": "Grupo Diusframi",
             "reviewStatus": "UNDER_REVIEW",
-            "programName": "loyalty_demo_program",
+            "programName": "Loyalty Demo Program",
             "multipleDevicesAndHoldersAllowedStatus": "ONE_USER_ALL_DEVICES",
             "enableSmartTap": 1,
             "redemptionIssuers": ["$issuerId"],
@@ -1072,7 +1074,7 @@ class WalletRepository() {
                                     "firstValue":{
                                         "fields":[
                                             {
-                                                "fieldPath":"object.textModulesData['user_name']"
+                                                "fieldPath":"object.textModulesData['pass_id']"
                                             }
                                         ]
                                     }
@@ -1150,9 +1152,9 @@ class WalletRepository() {
             },
             "textModulesData": [
                 {
-                    "header": "USER NAME LABEL",
-                    "body": "$userNameValue",
-                    "id": "user_name"
+                    "header": "PASS ID",
+                    "body": "$passObjectId,
+                    "id": "pass_id"
                 },
                 {
                     "header": "POINTS LABEL",
@@ -1188,9 +1190,9 @@ class WalletRepository() {
             "state": "EXPIRED",
             "textModulesData": [
                 {
-                    "header": "USER NAME LABEL",
-                    "body": "$userNameValue",
-                    "id": "user_name"
+                    "header": "PASS ID",
+                    "body": "$passObjectId",
+                    "id": "pass_id"
                 },
                 {
                     "header": "EXPIRATION LABEL",
