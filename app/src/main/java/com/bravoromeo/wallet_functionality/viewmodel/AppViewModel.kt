@@ -197,6 +197,10 @@ class AppViewModel (
         appState = appState.copy(currentLoyaltyPassId = newValue)
     }
 
+    fun onCardBalanceChange(newBalance: String){
+        viewModelScope.launch { appState = appState.copy(cardBalance = newBalance.toLong()) }
+    }
+
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun listLoyaltyClasses(context: Context){
         viewModelScope.launch {
@@ -208,6 +212,6 @@ class AppViewModel (
 
 data class AppState (
     var isWalletAvailable: Boolean = false,
-    var currentLoyaltyPassId: String = "loyalty-1234567890"
-
+    var currentLoyaltyPassId: String = "loyalty-1234567890-",
+    var cardBalance: Long = 0,
 )

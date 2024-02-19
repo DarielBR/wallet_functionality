@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
+import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -24,7 +25,7 @@ import kotlin.random.Random
 class WalletRepository() {
     //Define constants
     private val issuerId = "3388000000022308286"
-    private val classSuffix = "class_generic_demo_2"
+    private val classSuffix = "class_generic_demo_8"
     private val loyaltyClassSuffix = "class_loyalty_demo_2"
     private val classId = "$issuerId.$classSuffix"
     private val walletApiConfig = WalletApiConfig()
@@ -39,7 +40,7 @@ class WalletRepository() {
     private fun getInputStream(context: Context): InputStream?{
         val assetManager = context.assets
         return try {
-            assetManager.open("wallet-functionality-faebe65ba462.json")
+            assetManager.open("wallet-functionality-cf582752e480.json")
         } catch (e: IOException){
             e.printStackTrace()
             null
@@ -110,7 +111,7 @@ class WalletRepository() {
                 httpClient.newCall(getRequest).execute().use { response ->
                     if (response.isSuccessful) { //class exists
                         onResult.invoke("Class $classSuffix already exists for Issuer $issuerId's account.")
-                        Log.e("Google Wallet REST API", "class already exists.")
+                        Log.e("Google Wallet REST API", "class $classId already exists.")
                         return@launch//exiting the function
                     }
                     //if the program reached this point: the class does not exist.
@@ -122,11 +123,11 @@ class WalletRepository() {
                     httpClient.newCall(postRequest).execute().use { postResponse ->
                         if (postResponse.isSuccessful) {
                             onResult.invoke("Class $classSuffix created successfully for the Issuer $issuerId's account.")
-                            Log.e("Google Wallet REST API", "class created successfully.")
+                            Log.e("Google Wallet REST API", "class $classId created successfully.")
                             return@launch
                         } else {
-                            onResult.invoke("Failure creating the class $classSuffix")
-                            Log.e("Google Wallet REST API", "failure creating the class.")
+                            onResult.invoke("Failure creating the class $classId")
+                            Log.e("Google Wallet REST API", "failure creating the class $classId.")
                             return@launch
                         }
                     }
@@ -191,18 +192,18 @@ class WalletRepository() {
                             .build()
                         httpClient.newCall(putRequest).execute().use { responseToPut ->
                             if (responseToPut.isSuccessful){
-                                onResult.invoke("Class $classSuffix updated successfully.")
-                                Log.e("Google Wallet REST API", "class updated successfully.")
+                                onResult.invoke("Class $classId updated successfully.")
+                                Log.e("Google Wallet REST API", "class $classId updated successfully.")
                                 return@launch
                             }else{
                                 onResult.invoke("Failure while updating class $classSuffix")
-                                Log.e("Google Wallet REST API", "failure while updating class.")
+                                Log.e("Google Wallet REST API", "failure while updating $classId class.")
                                 return@launch
                             }
                         }
                     } else {//class does not exist, update cannot be done.
                         onResult.invoke("Class $classSuffix do not exists for the Issuer $issuerId's account.")
-                        Log.e("Google Wallet REST API", "class do not exists.")
+                        Log.e("Google Wallet REST API", "class $classId do not exists.")
                         return@launch
                     }
                 }
@@ -529,41 +530,41 @@ class WalletRepository() {
             .build()
 
         //Create Json structure for the genericClass
-        val loyaltyClassId = "$issuerId.$loyaltyClassSuffix"
-        val loyaltyClass = demoLoyaltyClassJson(classId = loyaltyClassId)
+        val newLoyaltyClassId = "$issuerId.$loyaltyClassSuffix"
+        val newLoyaltyClassJson = createDemoLoyaltyClassJson(issuerId = issuerId, classId = loyaltyClassSuffix)
         //Same as before, http request wont be allowed in the main thread.
         GlobalScope.launch(Dispatchers.IO){
             try {
                 val getRequest = Request.Builder()
-                    .url("${walletApiConfig.baseApiRESTUrl}/loyaltyClass/$loyaltyClassId")
+                    .url("${walletApiConfig.baseApiRESTUrl}/loyaltyClass/$newLoyaltyClassId")
                     .get()
                     .build()
-                httpClient.newCall(getRequest).execute().use { responseToGet ->
-                    if (responseToGet.isSuccessful) { //class exists
-                        onResult.invoke("Class $loyaltyClassId already exists for Issuer $issuerId's account.")
-                        Log.e("Google Wallet REST API", "class already exists.")
+                httpClient.newCall(getRequest).execute().use { response ->
+                    if (response.isSuccessful) { //class exists
+                        onResult.invoke("Class $newLoyaltyClassId already exists for Issuer $issuerId's account.")
+                        Log.e("Google Wallet REST API", "class $newLoyaltyClassId already exists.")
                         return@launch//exiting the function
                     }
                     //if the program reached this point: the class does not exist.
                     val postRequest = Request.Builder()
                         .url("${walletApiConfig.baseApiRESTUrl}/loyaltyClass")
-                        .post(loyaltyClass.toRequestBody("application/json".toMediaTypeOrNull()))
+                        .post(newLoyaltyClassJson.toRequestBody("application/json".toMediaTypeOrNull()))
                         .build()
 
-                    httpClient.newCall(postRequest).execute().use { responseToPost ->
-                        if (responseToPost.isSuccessful) {
-                            onResult.invoke("Class $loyaltyClass created successfully for the Issuer $issuerId's account.")
-                            Log.e("Google Wallet REST API", "class created successfully.")
+                    httpClient.newCall(postRequest).execute().use { postResponse ->
+                        if (postResponse.isSuccessful) {
+                            onResult.invoke("Class $newLoyaltyClassId created successfully for the Issuer $issuerId's account.")
+                            Log.e("Google Wallet REST API", "class $newLoyaltyClassId created successfully.")
                             return@launch
                         } else {
-                            onResult.invoke("Failure creating the class $loyaltyClassSuffix")
-                            Log.e("Google Wallet REST API", "failure creating the class.")
+                            onResult.invoke("Failure creating the class $newLoyaltyClassId")
+                            Log.e("Google Wallet REST API", "failure creating the class $newLoyaltyClassId.")
                             return@launch
                         }
                     }
                 }
             } catch (e: HttpException) {
-                onResult.invoke("Failure while creating Generic Class.")
+                onResult.invoke("Failure while creating Loyalty Class.")
                 Log.e("Google Wallet REST API", "error: ${e.localizedMessage}")
             }
         }
@@ -991,22 +992,6 @@ class WalletRepository() {
                             .build()
                         httpClient.newCall(postRequest).execute().use { patchResponse ->
                             if (patchResponse.isSuccessful){
-                                /*val expirationMessage = createLoyaltyPassMessageExpiration()
-                                val postRequestForMessage = Request.Builder()
-                                    .url("${walletApiConfig.baseApiRESTUrl}/loyaltyObject/$loyaltyPassId/addMessage")
-                                    .post(expirationMessage.toRequestBody("application/json".toMediaTypeOrNull()))
-                                    .build()
-                                httpClient.newCall(postRequestForMessage).execute().use {postResponse ->
-                                    if (postResponse.isSuccessful){
-                                        onResult.invoke("Success on sending expiration message to pass $loyaltyPassId")
-                                        Log.e("Google Wallet REST API", "Success on sending expiration message to pass: ${postResponse.networkResponse}.")
-                                        return@launch
-                                    }else{
-                                        onResult.invoke("Failure on sending expiration message to pass $loyaltyPassId")
-                                        Log.e("Google Wallet REST API", "Failure on sending expiration message to pass: ${postResponse.networkResponse}.")
-                                        return@launch
-                                    }
-                                }*/
                                 onResult.invoke("Success on expiring pass $loyaltyPassId")
                                 Log.e("Google Wallet REST API", "Success on expiring pass: ${patchResponse.networkResponse}.")
                                 return@launch
@@ -1029,16 +1014,39 @@ class WalletRepository() {
         }
     }
 
-    private fun demoLoyaltyClassJson(classId: String): String{
-        val result = """
+    private fun createDemoLoyaltyClassJson(issuerId: String, classId: String): String{
+        return """
         {
-            "id": "$issuerId.$loyaltyClassSuffix",
+            "programName": "Loyalty Demo Program",
+            "programLogo": {
+                "sourceUri": {
+                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/logo_color.png"
+                },
+                "contentDescription": {
+                    "defaultValue": {
+                        "language": "en-US",
+                        "value": ""
+                    }
+                }
+            },
+            "id": "$issuerId.$classId",
+            "issuerName": "Grupo Diusframi",
+            "reviewStatus": "UNDER_REVIEW",
+            "hexBackgroundColor": "#ffffff"
+        }
+        """//.trimIndent()
+    }
+
+    private fun demoLoyaltyClassJson(classId: String): String{
+        return """
+        {
+            "id": "$classId",
             "issuerName": "Grupo Diusframi",
             "reviewStatus": "UNDER_REVIEW",
             "programName": "Loyalty Demo Program",
             "multipleDevicesAndHoldersAllowedStatus": "ONE_USER_ALL_DEVICES",
             "enableSmartTap": 1,
-            "redemptionIssuers": ["$issuerId"],
+            "redemptionIssuers": ['$issuerId'],
             "securityAnimation": {
                 "animationType": "FOIL_SHIMMER"
             },
@@ -1112,7 +1120,6 @@ class WalletRepository() {
             }
         }
         """.trimIndent()
-        return result
     }
 
     private fun createLoyaltyPass(

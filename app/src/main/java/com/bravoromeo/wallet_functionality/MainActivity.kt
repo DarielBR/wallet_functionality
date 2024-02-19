@@ -42,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bravoromeo.wallet_functionality.ui.elements.WalletButton
+import com.bravoromeo.wallet_functionality.ui.screens.SolRedScreen
 import com.bravoromeo.wallet_functionality.ui.theme.Wallet_functionalityTheme
 import com.bravoromeo.wallet_functionality.viewmodel.AppViewModel
 import com.google.android.gms.pay.Pay
@@ -63,15 +64,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             Wallet_functionalityTheme {
                 // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier=Modifier.fillMaxSize(),
-                    color=MaterialTheme.colorScheme.background
-                ) {
-                    Greeting(
-                        viewModel = viewModel,
-                        context = this
-                    )
-                }
+                SolRedScreen(
+                    viewModel = viewModel
+                )
             }
         }
     }
@@ -338,6 +333,6 @@ fun Greeting(
 @Composable
 fun GreetingPreview() {
     Wallet_functionalityTheme {
-        Greeting()
+        SolRedScreen()
     }
 }
