@@ -49,7 +49,7 @@ fun SolRedScreen(
         ) {
             CardView()
             Spacer(modifier = modifier.height(20.dp))
-            BalanceTextBox(modifier = modifier.width(250.dp)){ viewModel?.onCardBalanceChange(it) }
+            BalanceTextBox(modifier = modifier.width(230.dp)){ viewModel?.onCardBalanceChange(it) }
             Spacer(modifier = modifier.height(20.dp))
             WalletButton { /*TODO*/ }
         }
