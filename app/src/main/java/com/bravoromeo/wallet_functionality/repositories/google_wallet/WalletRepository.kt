@@ -25,6 +25,7 @@ import kotlin.random.Random
 
 class WalletRepository() {
     //Define constants
+    private val solRedCardId = "DR2GH4Wl4ErcVwOyceRuv"
     private val issuerId = "3388000000022308286"
     private val classSuffix = "class_generic_demo"
     private val loyaltyClassSuffix = "class_loyalty_demo_2"
@@ -325,40 +326,8 @@ class WalletRepository() {
         return result
     }
 
-    /*fun solredClassJson(): String{
-        val result = """
-        {
-            "id": "3388000000022308286.solred_balance_card",
-            "enableSmartTap": 1,
-            "redemptionIssuers": ['3388000000022308286'],
-            "multipleDevicesAndHoldersAllowedStatus": 'ONE_USER_ALL_DEVICES',
-            "imageModulesData": [
-                {
-                    "mainImage": {
-                        "sourceUri": {
-                            "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/solred_card_1.png"
-                        },
-                        "contentDescription": {
-                            "defaultValue": {
-                                "language": "en-US",
-                                "value": "CARD_ART"
-                            }
-                        }
-                    },
-                    "id": "card_art_01"
-                }
-            ]
-        }
-        """
-        return result
-    }*/
-    fun solredClassJson(): String{
-        val result = """
-        {
-            "id": "$issuerId.solred_balance_card",
-            "enableSmartTap": 1,
-            "redemptionIssuers": ['3388000000022308286'],
-            "multipleDevicesAndHoldersAllowedStatus": 'ONE_USER_ALL_DEVICES',
+    /*to have the balance showed on the SolRed Card
+    ,
             "classTemplateInfo": {
                 "cardTemplateOverride": {
                     "cardRowTemplateInfos": [
@@ -378,6 +347,14 @@ class WalletRepository() {
                     ]
                 }
             }
+    */
+    fun solredClassJson(): String{
+        val result = """
+        {
+            "id": "$issuerId.solred_balance_card",
+            "enableSmartTap": 1,
+            "redemptionIssuers": ['3388000000022308286'],
+            "multipleDevicesAndHoldersAllowedStatus": 'ONE_USER_ALL_DEVICES'
         }
         """
         return result
@@ -1311,10 +1288,10 @@ class WalletRepository() {
                         "id": "$issuerId.$passObjectId",
                         "classId": "$innerClassId",
                         "genericType": "GENERIC_TYPE_UNSPECIFIED",
-                        "hexBackgroundColor": "#ffffff",
+                        "hexBackgroundColor": "#024975",
                         "logo": {
                             "sourceUri": {
-                                "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/logo_color.png"
+                                "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/solred_logo.png"
                             }
                         },
                         "cardTitle": {
@@ -1336,7 +1313,7 @@ class WalletRepository() {
                         },
                         "heroImage": {
                             "sourceUri": {
-                                "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/hero_image.png"
+                                "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/solred_hero.png"
                             }
                         },
                         "textModulesData": [
@@ -1360,73 +1337,122 @@ class WalletRepository() {
     ): String{
         return """
         {
-                "id": "$issuerId.$passObjectId",
-                "classId": "$issuerId.solred_balance_card",
-                "genericType": "GENERIC_TYPE_UNSPECIFIED",
-                "hexBackgroundColor": "#001C83",
-                "logo": {
-                  "sourceUri": {
-                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/logo_color.png"
-                  }
-                },
-                "cardTitle": {
-                  "defaultValue": {
+            "id": "$issuerId.$passObjectId",
+            "classId": "$issuerId.solred_balance_card",
+            "genericType": "GENERIC_VOUCHER",
+            "hexBackgroundColor": "#024975",
+            "logo": {
+                "sourceUri": {
+                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/solred_logo.png"
+                }
+            },
+            "cardTitle": {
+                "defaultValue": {
                     "language": "es",
-                    "value": "Grupo Diusframi"
-                  }
-                },
-                "subheader": {
-                  "defaultValue": {
+                    "value": "SolRed"
+                }
+            },
+            "header": {
+                "defaultValue": {
                     "language": "es",
-                    "value": "USER"
-                  }
-                },
-                "header": {
-                  "defaultValue": {
-                    "language": "es",
-                    "value": "Doe, Jhon"
-                  }
-                },
-                "barcode": {
-                  "type": "QR_CODE",
-                  "value": "$passObjectId",
-                  "alternateText":"$passObjectId"
-                },
-                "heroImage": {
-                  "sourceUri": {
-                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/hero_image.png"
-                  }
-                },
-                "textModulesData": [
-                  {
-                    "header": "ID",
-                    "body": "$passObjectId",
-                    "id": "id"
-                  },
-                  {
-                    "header": "POINTS",
-                    "body": "${Random.nextInt(1, 99)}",
-                    "id": "points"
-                  }
-                ]
+                    "value": "Debit Card"
+                }
+            },
+            "barcode": {
+                "type": "QR_CODE",
+                "value": "$passObjectId",
+                "alternateText":"$passObjectId"
+            },
+            "heroImage": {
+                "sourceUri": {
+                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/solred_hero.png"
+                }
+            },
+            "textModulesData": [
+                {
+                    "header": "BALANCE",
+                    "body": "$points",
+                    "id": "balance"
+                }
+            ],
+            "groupingInfo": {
+                "sortIndex": 1,
+                "groupingId": "solred_group_01"
+            }
         }            
         """.trimIndent()
     }
 
-    /**
-    "wideLogo": {
-    "sourceUri": {
-    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/solred_card_1.png"
-    },
-    "contentDescription": {
-    "defaultValue": {
-    "language": "en",
-    "value": "WIDE_LOGO_IMAGE_DESCRIPTION"
-    }
-    }
-    },
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun updateSolRedCard(
+        passId: String,
+        modifiedPass: String? = null,
+        context: Context,
+        onResult: (String) -> Unit
+    ){
+        //AssetsManager instance to access necessary to access the Google Service Account key.json file
+        val inputStream = getInputStream(context)
+        //Load Google Credentials to access the REST API
+        val googleCredentials: GoogleCredentials?
+        if (inputStream != null) {
+            googleCredentials = createGoogleCredentials(inputStream)
+        } else {
+            onResult.invoke("Process failure while creating Google Credentials.")
+            Log.e("Key.Json file", "inputStream is not loading key.json content.")
+            return
+        }
+        //To access the Wallet Client REST API a signed session must be created.
+        val httpClient = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val originalRequest = chain.request()
+                val accessToken = googleCredentials.accessToken?.tokenValue
+                val newRequest = originalRequest.newBuilder()
+                    .header("Authorization", "Bearer $accessToken")
+                    .build()
+                chain.proceed(newRequest)
+            }
+            .build()
 
-     */
+        //Create Json structure for the genericClass
+        val solRedCardId = "$issuerId.$passId"
+        val solRedCard = createSolRedCardJson(passObjectId = passId, points = 10)
+        //Http request wont be allowed in the main thread.
+        GlobalScope.launch(Dispatchers.IO){
+            try {
+                val getRequest = Request.Builder()
+                    .url("${walletApiConfig.baseApiRESTUrl}/genericObject/$solRedCardId")
+                    .get()
+                    .build()
+                httpClient.newCall(getRequest).execute().use { responseToGet ->
+                    if (responseToGet.isSuccessful) { //class exists, and update can be made
+                        Log.e("Google Wallet REST API", "Get to SolRedCard Endpoint successful, ${responseToGet.networkResponse}")
+                        val putRequest = Request.Builder()
+                            .url("${walletApiConfig.baseApiRESTUrl}/genericObject/$solRedCardId")
+                            .put(solRedCard.toRequestBody("application/json".toMediaTypeOrNull()))
+                            .build()
+                        httpClient.newCall(putRequest).execute().use { responseToPut ->
+                            if (responseToPut.isSuccessful){
+                                onResult.invoke("Pass $solRedCardId updated successfully.")
+                                Log.e("Google Wallet REST API", "SolRed card updated successfully.")
+                                return@launch
+                            }else{
+                                onResult.invoke("Failure while updating pass $solRedCardId")
+                                Log.e("Google Wallet REST API", "failure while updating SolRed card: ${responseToPut.networkResponse}.")
+                                return@launch
+                            }
+                        }
+                    } else {//class does not exist, update cannot be done.
+                        onResult.invoke("Pass $solRedCardId do not exists for the Issuer $issuerId's account.")
+                        Log.e("Google Wallet REST API", "SolRed card do not exists.")
+                        return@launch
+                    }
+                }
+            } catch (e: HttpException) {
+                onResult.invoke("Failure while getting Loyalty pass.")
+                Log.e("Google Wallet REST API", "error: ${e.localizedMessage}")
+            }
+        }
+    }
 
 
     private fun createMessage(messageId: String, messageBody: String): String{

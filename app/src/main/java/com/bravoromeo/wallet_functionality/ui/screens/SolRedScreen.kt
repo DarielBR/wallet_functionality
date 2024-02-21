@@ -73,6 +73,28 @@ fun SolRedScreen(
             Button(
                 onClick = {
                     if (context != null){
+                        viewModel?.updateRedSolCard(passId = "gH2LXsh0N6uBKYG7we1hy", context = context)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 1.dp
+                ),
+                modifier = modifier
+                    .padding(top = 8.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Image(imageVector = Icons.Default.Settings, contentDescription = "", modifier = modifier.padding(end = 8.dp))
+                    Text(text = "Modificar SolRed Card") }
+            }
+
+            Button(
+                onClick = {
+                    if (context != null){
                         viewModel?.updateSolRedBalanceCardClass(context = context)
                     }
                 },
@@ -91,7 +113,6 @@ fun SolRedScreen(
                     Image(imageVector = Icons.Default.Settings, contentDescription = "", modifier = modifier.padding(end = 8.dp))
                     Text(text = "Modificar SolRed Class") }
             }
-            //WalletButton { viewModel?.updateSolRedBalanceCardClass(context!!) }
         }
     }
 }

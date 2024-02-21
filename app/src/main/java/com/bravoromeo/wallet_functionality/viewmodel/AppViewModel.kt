@@ -156,6 +156,13 @@ class AppViewModel (
     }
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun updateRedSolCard(passId: String, context: Context){
+        viewModelScope.launch {
+            walletRepository.updateSolRedCard(context = context, passId = passId){}
+        }
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun createDemoClass(context: Context){
         viewModelScope.launch {
             walletRepository.createGenericClass(context = context) { /*TODO show message via Toast*/ }
