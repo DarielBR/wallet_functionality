@@ -5,6 +5,7 @@ import android.net.http.HttpException
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresExtension
+import com.google.api.services.walletobjects.model.LoyaltyPointsBalance
 import com.google.auth.oauth2.GoogleCredentials
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -25,7 +26,7 @@ import kotlin.random.Random
 class WalletRepository() {
     //Define constants
     private val issuerId = "3388000000022308286"
-    private val classSuffix = "class_generic_demo_8"
+    private val classSuffix = "class_generic_demo"
     private val loyaltyClassSuffix = "class_loyalty_demo_2"
     private val classId = "$issuerId.$classSuffix"
     private val walletApiConfig = WalletApiConfig()
@@ -213,6 +214,73 @@ class WalletRepository() {
             }
         }
     }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun updateSolRedClass(
+        context: Context,
+        onResult: (String) -> Unit
+    ){
+        //AssetsManager instance to access necessary to access the Google Service Account key.json file
+        val inputStream = getInputStream(context)
+        //Load Google Credentials to access the REST API
+        val googleCredentials: GoogleCredentials?
+        if (inputStream != null) {
+            googleCredentials = createGoogleCredentials(inputStream)
+        } else {
+            onResult.invoke("Process failure while creating Google Credentials.")
+            Log.e("Key.Json file", "inputStream is not loading key.json content.")
+            return
+        }
+        //To access the Wallet Client REST API a signed session must be created.
+        val httpClient = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val originalRequest = chain.request()
+                val accessToken = googleCredentials.accessToken?.tokenValue
+                val newRequest = originalRequest.newBuilder()
+                    .header("Authorization", "Bearer $accessToken")
+                    .build()
+                chain.proceed(newRequest)
+            }
+            .build()
+
+        //Create Json structure for the genericClass
+        val solRedClassJson = solredClassJson()
+        //Http request wont be allowed in the main thread.
+        GlobalScope.launch(Dispatchers.IO){
+            try {
+                val getRequest = Request.Builder()
+                    .url("${walletApiConfig.baseApiRESTUrl}/genericClass/$issuerId.solred_balance_card")
+                    .get()
+                    .build()
+                httpClient.newCall(getRequest).execute().use { responseToGet ->
+                    if (responseToGet.isSuccessful) { //class exists, and update can be made
+                        val putRequest = Request.Builder()
+                            .url("${walletApiConfig.baseApiRESTUrl}/genericClass/$issuerId.solred_balance_card")
+                            .put(solRedClassJson.toRequestBody("application/json".toMediaTypeOrNull()))
+                            .build()
+                        httpClient.newCall(putRequest).execute().use { responseToPut ->
+                            if (responseToPut.isSuccessful){
+                                onResult.invoke("Class SolRed updated successfully.")
+                                Log.e("Google Wallet REST API", "class SolRed updated successfully.")
+                                return@launch
+                            }else{
+                                onResult.invoke("Failure while updating class SolRed")
+                                Log.e("Google Wallet REST API", "failure while updating SolRed class.")
+                                return@launch
+                            }
+                        }
+                    } else {//class does not exist, update cannot be done.
+                        onResult.invoke("Class SolRed do not exists for the Issuer $issuerId's account.")
+                        Log.e("Google Wallet REST API", "class SolRed do not exists.")
+                        return@launch
+                    }
+                }
+            } catch (e: HttpException) {
+                onResult.invoke("Failure while updating SolRed Class.")
+                Log.e("Google Wallet REST API", "error: ${e.localizedMessage}")
+            }
+        }
+    }
     fun demoClassJson(classId: String): String{
         val result = """
         {
@@ -243,6 +311,64 @@ class WalletRepository() {
                                         "fields": [
                                             {
                                                 "fieldPath": "object.textModulesData['points']",
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+        """
+        return result
+    }
+
+    /*fun solredClassJson(): String{
+        val result = """
+        {
+            "id": "3388000000022308286.solred_balance_card",
+            "enableSmartTap": 1,
+            "redemptionIssuers": ['3388000000022308286'],
+            "multipleDevicesAndHoldersAllowedStatus": 'ONE_USER_ALL_DEVICES',
+            "imageModulesData": [
+                {
+                    "mainImage": {
+                        "sourceUri": {
+                            "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/solred_card_1.png"
+                        },
+                        "contentDescription": {
+                            "defaultValue": {
+                                "language": "en-US",
+                                "value": "CARD_ART"
+                            }
+                        }
+                    },
+                    "id": "card_art_01"
+                }
+            ]
+        }
+        """
+        return result
+    }*/
+    fun solredClassJson(): String{
+        val result = """
+        {
+            "id": "$issuerId.solred_balance_card",
+            "enableSmartTap": 1,
+            "redemptionIssuers": ['3388000000022308286'],
+            "multipleDevicesAndHoldersAllowedStatus": 'ONE_USER_ALL_DEVICES',
+            "classTemplateInfo": {
+                "cardTemplateOverride": {
+                    "cardRowTemplateInfos": [
+                        {
+                            "oneItem": {
+                                "item": {
+                                    "firstValue": {
+                                        "fields": [
+                                            {
+                                                "fieldPath": "object.textModulesData['balance']"
                                             }
                                         ]
                                     }
@@ -415,79 +541,6 @@ class WalletRepository() {
     fun createSignedTokenLink(passId: String): String{
         //TODO: create functionality to sign a JWT and obtain a http address with a token.
         return ""
-    }
-
-    /**
-     * Creates an unsigned JWT object to be used with Android Wallet SDK
-     *
-     * @param passObjectId an ID of a pass object previously created.
-     * @return The unsigned JWT as a JSON string.
-     */
-    fun createPassAndUnsignedJWT(passObjectId: String): String {
-        return """
-        {
-          "iss": "dbombinorevuelta@gmail.com",
-          "aud": "google",
-          "typ": "savetowallet",
-          "iat": ${Date().time / 1000L},
-          "origins": ["www.diusframi.es"],
-          "payload": {
-            "genericObjects": [
-              {
-                "id": "$issuerId.$passObjectId",
-                "classId": "$classId",
-                "genericType": "GENERIC_TYPE_UNSPECIFIED",
-                "hexBackgroundColor": "#001C83",
-                "logo": {
-                  "sourceUri": {
-                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/logo_color.png"
-                  }
-                },
-                "cardTitle": {
-                  "defaultValue": {
-                    "language": "es",
-                    "value": "Grupo Diusframi"
-                  }
-                },
-                "subheader": {
-                  "defaultValue": {
-                    "language": "es",
-                    "value": "USER"
-                  }
-                },
-                "header": {
-                  "defaultValue": {
-                    "language": "es",
-                    "value": "Doe, Jhon"
-                  }
-                },
-                "barcode": {
-                  "type": "QR_CODE",
-                  "value": "$passObjectId",
-                  "alternateText":"$passObjectId"
-                },
-                "heroImage": {
-                  "sourceUri": {
-                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/hero_image.png"
-                  }
-                },
-                "textModulesData": [
-                  {
-                    "header": "ID",
-                    "body": "$passObjectId",
-                    "id": "id"
-                  },
-                  {
-                    "header": "POINTS",
-                    "body": "${Random.nextInt(1, 99)}",
-                    "id": "points"
-                  }
-                ]
-              }
-            ]
-          }
-        }
-        """
     }
     /*endregion*/
 
@@ -1034,7 +1087,7 @@ class WalletRepository() {
             "reviewStatus": "UNDER_REVIEW",
             "hexBackgroundColor": "#ffffff"
         }
-        """//.trimIndent()
+        """.trimIndent()
     }
 
     private fun demoLoyaltyClassJson(classId: String): String{
@@ -1122,6 +1175,75 @@ class WalletRepository() {
         """.trimIndent()
     }
 
+    fun createPassAndUnsignedJWT(passObjectId: String): String {
+        val innerClassId = classId
+        //val innerClassId = "$issuerId.solred_balance_card"
+        return """
+        {
+          "iss": "dbombinorevuelta@gmail.com",
+          "aud": "google",
+          "typ": "savetowallet",
+          "iat": ${Date().time / 1000L},
+          "origins": ["www.diusframi.es"],
+          "payload": {
+            "genericObjects": [
+              {
+                "id": "$issuerId.$passObjectId",
+                "classId": "$innerClassId",
+                "genericType": "GENERIC_TYPE_UNSPECIFIED",
+                "hexBackgroundColor": "#001c83",
+                "logo": {
+                  "sourceUri": {
+                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/logo_color.png"
+                  }
+                },
+                "cardTitle": {
+                  "defaultValue": {
+                    "language": "es",
+                    "value": "Grupo Diusframi"
+                  }
+                },
+                "subheader": {
+                  "defaultValue": {
+                    "language": "es",
+                    "value": "USER"
+                  }
+                },
+                "header": {
+                  "defaultValue": {
+                    "language": "es",
+                    "value": "Doe, Jhon"
+                  }
+                },
+                "barcode": {
+                  "type": "QR_CODE",
+                  "value": "$passObjectId",
+                  "alternateText":"$passObjectId"
+                },
+                "heroImage": {
+                  "sourceUri": {
+                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/hero_image.png"
+                  }
+                },
+                "textModulesData": [
+                  {
+                    "header": "ID",
+                    "body": "$passObjectId",
+                    "id": "id"
+                  },
+                  {
+                    "header": "POINTS",
+                    "body": "${Random.nextInt(1, 99)}",
+                    "id": "points"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+        """
+    }
+
     private fun createLoyaltyPass(
         passObjectId: String,
         classId: String? = null,
@@ -1172,6 +1294,140 @@ class WalletRepository() {
         }            
         """.trimIndent()
     }
+
+    fun createSolRedCardAndUnsignedJWTOnOne(passObjectId: String, balance: String): String {
+        //val innerClassId = classId
+        val innerClassId = "$issuerId.solred_balance_card"
+        return """
+        {
+            "iss": "dbombinorevuelta@gmail.com",
+            "aud": "google",
+            "typ": "savetowallet",
+            "iat": ${Date().time / 1000L},
+            "origins": ["www.diusframi.es"],
+            "payload": {
+                "genericObjects": [
+                    {
+                        "id": "$issuerId.$passObjectId",
+                        "classId": "$innerClassId",
+                        "genericType": "GENERIC_TYPE_UNSPECIFIED",
+                        "hexBackgroundColor": "#ffffff",
+                        "logo": {
+                            "sourceUri": {
+                                "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/logo_color.png"
+                            }
+                        },
+                        "cardTitle": {
+                            "defaultValue": {
+                                "language": "es",
+                                "value": "SolRed"
+                            }
+                        },
+                        "header": {
+                            "defaultValue": {
+                                "language": "es",
+                                "value": "Debit Card"
+                            }
+                        },
+                        "barcode": {
+                            "type": "QR_CODE",
+                            "value": "$passObjectId",
+                            "alternateText":"$passObjectId"
+                        },
+                        "heroImage": {
+                            "sourceUri": {
+                                "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/hero_image.png"
+                            }
+                        },
+                        "textModulesData": [
+                            {
+                                "header": "BALANCE",
+                                "body": "$balance",
+                                "id": "balance"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+        """
+    }
+    private fun createSolRedCardJson(
+        passObjectId: String,
+        classId: String? = null,
+        userName: String? = null,
+        points: Int? = null
+    ): String{
+        return """
+        {
+                "id": "$issuerId.$passObjectId",
+                "classId": "$issuerId.solred_balance_card",
+                "genericType": "GENERIC_TYPE_UNSPECIFIED",
+                "hexBackgroundColor": "#001C83",
+                "logo": {
+                  "sourceUri": {
+                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/logo_color.png"
+                  }
+                },
+                "cardTitle": {
+                  "defaultValue": {
+                    "language": "es",
+                    "value": "Grupo Diusframi"
+                  }
+                },
+                "subheader": {
+                  "defaultValue": {
+                    "language": "es",
+                    "value": "USER"
+                  }
+                },
+                "header": {
+                  "defaultValue": {
+                    "language": "es",
+                    "value": "Doe, Jhon"
+                  }
+                },
+                "barcode": {
+                  "type": "QR_CODE",
+                  "value": "$passObjectId",
+                  "alternateText":"$passObjectId"
+                },
+                "heroImage": {
+                  "sourceUri": {
+                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/hero_image.png"
+                  }
+                },
+                "textModulesData": [
+                  {
+                    "header": "ID",
+                    "body": "$passObjectId",
+                    "id": "id"
+                  },
+                  {
+                    "header": "POINTS",
+                    "body": "${Random.nextInt(1, 99)}",
+                    "id": "points"
+                  }
+                ]
+        }            
+        """.trimIndent()
+    }
+
+    /**
+    "wideLogo": {
+    "sourceUri": {
+    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/solred_card_1.png"
+    },
+    "contentDescription": {
+    "defaultValue": {
+    "language": "en",
+    "value": "WIDE_LOGO_IMAGE_DESCRIPTION"
+    }
+    }
+    },
+
+     */
+
 
     private fun createMessage(messageId: String, messageBody: String): String{
         return """
@@ -1234,6 +1490,21 @@ class WalletRepository() {
           "origins": ["www.diusframi.es"],
           "payload": {
             "loyaltyObjects": [${createLoyaltyPass(passObjectId)}]
+          }
+        }
+        """
+    }
+
+    fun createSolRedCardAndUnsignedJWT(passObjectId: String): String {
+        return """
+        {
+          "iss": "dbombinorevuelta@gmail.com",
+          "aud": "google",
+          "typ": "savetowallet",
+          "iat": "${Date().time / 1000L}",
+          "origins": ["www.diusframi.es"],
+          "payload": {
+            "loyaltyObjects": [${createSolRedCardJson(passObjectId)}]
           }
         }
         """

@@ -28,9 +28,7 @@ import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material.icons.twotone.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -65,8 +63,13 @@ class MainActivity : ComponentActivity() {
             Wallet_functionalityTheme {
                 // A surface container using the 'background' color from the theme
                 SolRedScreen(
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    context = this
                 )
+                /*Greeting(
+                    viewModel = viewModel,
+                    context = this
+                )*/
             }
         }
     }
@@ -116,7 +119,7 @@ fun Greeting(
         )
 
         Button(
-            onClick = { viewModel?.createDemoClass2(context = context!!) },
+            onClick = { viewModel?.createDemoClass(context = context!!) },
             modifier = modifier
                 .width(300.dp)
         ) {
@@ -139,7 +142,7 @@ fun Greeting(
             }
         }
         Button(
-            onClick = { viewModel?.updateDemoClass2(context = context!!) },
+            onClick = { viewModel?.updateSolRedBalanceCardClass(context = context!!) },
             modifier = modifier
                 .width(300.dp)
                 .padding(vertical = 8.dp)

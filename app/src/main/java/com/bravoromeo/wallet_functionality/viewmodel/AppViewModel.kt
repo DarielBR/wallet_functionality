@@ -115,7 +115,7 @@ class AppViewModel (
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun savePassToWallet(context: Context){
         //val unsignedJWT = walletRepository.createUnsignedJWT("", context)
-        val unsignedJWT = walletRepository.createPassAndUnsignedJWT("0987654321-qwertyuiop")
+        val unsignedJWT = walletRepository.createPassAndUnsignedJWT("0987654321-awertyuiop")
         if (unsignedJWT != null) {
             val activity = context as? Activity
             if (activity != null){
@@ -137,7 +137,26 @@ class AppViewModel (
     }
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
-    fun createDemoClass2(context: Context){
+    fun saveSolRedCardToWallet(context: Context){
+        //val unsignedJWT = walletRepository.createUnsignedJWT("", context)
+        val unsignedJWT = walletRepository.createSolRedCardAndUnsignedJWTOnOne(createRandomQRCode(),appState.cardBalance.toString())
+        if (unsignedJWT != null) {
+            val activity = context as? Activity
+            if (activity != null){
+                walletClient.savePasses(unsignedJWT, activity, requestCode)
+            }
+        }
+    }
+
+    private fun createRandomQRCode(): String{
+        val allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        return (1..21)
+            .map { allowedChars.random(Random) }
+            .joinToString("")
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun createDemoClass(context: Context){
         viewModelScope.launch {
             walletRepository.createGenericClass(context = context) { /*TODO show message via Toast*/ }
         }
@@ -151,9 +170,9 @@ class AppViewModel (
     }
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
-    fun updateDemoClass2(context: Context){
+    fun updateSolRedBalanceCardClass(context: Context){
         viewModelScope.launch {
-            walletRepository.updateGenericClass(context = context){/*TODO show message via Toast*/}
+            walletRepository.updateSolRedClass(context = context){/*TODO show message via Toast*/}
         }
     }
 
