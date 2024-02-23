@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bravoromeo.wallet_functionality.repositories.google_wallet.WalletRepository
+import com.bravoromeo.wallet_functionality.repositories.google_wallet.WalletSolRed
 import com.google.android.gms.pay.PayApiAvailabilityStatus
 import com.google.android.gms.pay.PayClient
 import kotlinx.coroutines.launch
@@ -21,7 +22,8 @@ class AppViewModel (
     private var walletClient: PayClient,
     private var requestCode: Int
 ): ViewModel(){
-    private var walletRepository =  WalletRepository()
+    private var walletRepository =  WalletRepository()//for this application purpose is not being in use.
+    private var walletSolRed = WalletSolRed()
     var appState by mutableStateOf(AppState())
         private set
 
@@ -43,8 +45,8 @@ class AppViewModel (
 
     //This data should be obtained via repositories, its hard-coded here for learning purposes only
     private val issuerEmail = "dbombinorevuelta@gmail.com"
-    private val issuerId = "3388000000022308286"//"3388000000022299939"
-    private val passClass = "3388000000022308286.class_generic_demo"//"3388000000022299939.1a9245d0-5a53-4f6f-aef1-3e8296d4a26a"
+    private val issuerId = "3388000000022308286"
+    private val passClass = "3388000000022308286.class_generic_demo"
     private val passId = UUID.randomUUID().toString()
 
     private val newObjectJson = """
@@ -126,7 +128,6 @@ class AppViewModel (
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun saveLoyaltyPassToWallet(context: Context){
-        //val unsignedJWT = walletRepository.createUnsignedJWT("", context)
         val unsignedJWT = walletRepository.createLoyaltyPassAndUnsignedJWT(appState.currentLoyaltyPassId)
         if (unsignedJWT != null) {
             val activity = context as? Activity
@@ -138,8 +139,7 @@ class AppViewModel (
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun saveSolRedCardToWallet(context: Context){
-        //val unsignedJWT = walletRepository.createUnsignedJWT("", context)
-        val unsignedJWT = walletRepository.createSolRedCardAndUnsignedJWTOnOne(createRandomQRCode(),appState.cardBalance.toString())
+        val unsignedJWT = walletSolRed.createSolRedCardUnsignedJWT(cardId = createRandomQRCode(), balance = (appState.cardBalance * 10000L).toInt())
         if (unsignedJWT != null) {
             val activity = context as? Activity
             if (activity != null){
@@ -156,9 +156,9 @@ class AppViewModel (
     }
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
-    fun updateRedSolCard(passId: String, context: Context){
+    fun updateRedSolCard(cardId: String, balance: Int, context: Context){
         viewModelScope.launch {
-            walletRepository.updateSolRedCard(context = context, passId = passId){}
+            walletSolRed.updateSolRedCad(context = context, cardId = cardId, balance = balance){}
         }
     }
 
@@ -179,7 +179,7 @@ class AppViewModel (
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun updateSolRedBalanceCardClass(context: Context){
         viewModelScope.launch {
-            walletRepository.updateSolRedClass(context = context){/*TODO show message via Toast*/}
+            walletSolRed.updateSolRedClass(context = context){/*TODO show message via Toast*/}
         }
     }
 
@@ -223,8 +223,8 @@ class AppViewModel (
         appState = appState.copy(currentLoyaltyPassId = newValue)
     }
 
-    fun onCardBalanceChange(newBalance: String){
-        viewModelScope.launch { appState = appState.copy(cardBalance = newBalance.toLong()) }
+    fun onCardBalanceChange(newBalance: Long?){
+        viewModelScope.launch { appState = appState.copy(cardBalance = newBalance ?: 0L) }
     }
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)

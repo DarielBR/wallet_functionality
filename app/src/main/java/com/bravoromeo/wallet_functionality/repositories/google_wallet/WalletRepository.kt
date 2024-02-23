@@ -1237,24 +1237,24 @@ class WalletRepository() {
             "classId": "$loyaltyClassId",
             "state": "ACTIVE",
             "loyaltyPoints": {
-              "balance": {
-                "int": $points
-              },
-              "localizedLabel": {
-                "defaultValue": {
-                  "language": "en-US",
-                    "value": "Puntos de recompensa"
-                  }
-              }
+                "balance": {
+                    "int": $points
+                },
+                "localizedLabel": {
+                    "defaultValue": {
+                    "language": "en-US",
+                        "value": "Puntos de recompensa"
+                    }
+                }
             },
             "barcode": {
-              "type": "QR_CODE",
-              "value": "$passObjectId",
-              "alternateText": "$passObjectId"
+                "type": "QR_CODE",
+                "value": "$passObjectId",
+                "alternateText": "$passObjectId"
             },
             "groupingInfo": {
-              "sortIndex": 1,
-              "groupingId": "loyalty-05"
+                "sortIndex": 1,
+                "groupingId": "loyalty-05"
             },
             "textModulesData": [
                 {
@@ -1273,7 +1273,6 @@ class WalletRepository() {
     }
 
     fun createSolRedCardAndUnsignedJWTOnOne(passObjectId: String, balance: String): String {
-        //val innerClassId = classId
         val innerClassId = "$issuerId.solred_balance_card"
         return """
         {

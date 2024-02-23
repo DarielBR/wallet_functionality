@@ -31,7 +31,7 @@ import java.util.Locale
 @Composable
 fun PreviewBalanceTextBox(){
     Wallet_functionalityTheme {
-        BalanceTextBox(){}
+        BalanceTextBox()
     }
 }
 
@@ -39,9 +39,9 @@ fun PreviewBalanceTextBox(){
 @Composable
 fun BalanceTextBox(
     modifier: Modifier = Modifier,
-    viewModel: AppViewModel? = null,
-    onValueChange: (String) -> Unit
+    viewModel: AppViewModel? = null
 ) {
+    val balanceValue = viewModel?.appState?.cardBalance
     Surface(
         shape = MaterialTheme.shapes.medium,
         shadowElevation = 2.dp,
@@ -49,9 +49,11 @@ fun BalanceTextBox(
             .fillMaxWidth()
             .padding(16.dp)
     ){
+        //Text(text = balanceValue.toString(), style = MaterialTheme.typography.headlineSmall)
         OutlinedTextField(
-            value = viewModel?.appState?.cardBalance.toString(),
-            onValueChange = onValueChange,//{ viewModel?.onCardBalanceChange(it.toLong()) },
+            value = balanceValue.toString(),
+            onValueChange = {viewModel?.onCardBalanceChange(it.toLongOrNull())
+            },
             shape = MaterialTheme.shapes.small,
             visualTransformation = EuroVisualTransformation(),
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
@@ -84,7 +86,7 @@ class EuroVisualTransformation : VisualTransformation {
 
         val formattedText = try {
             // Assuming text is a plain number without decimal points
-            val number = text.toString().toDouble() / 100 // Convert to proper decimal for currency
+            val number = text.toString().toDouble() / 1000 // Convert to proper decimal for currency
             numberFormat.format(number)
         } catch (e: NumberFormatException) {
             "€0,00" // Default or fallback value in case of format exception
