@@ -93,7 +93,10 @@ dependencies {
     implementation ("com.google.api-client:google-api-client:2.0.0")
     implementation ("com.google.auth:google-auth-library-oauth2-http:1.10.0")
     implementation ("javax.json:javax.json-api:1.1")
-    //implementation ("org.glassfish:javax.json:1.1")
     //Google Wallet API Client library
     implementation(files("C:/Users/dbombino/AndroidStudioProjects/research/wallet_functionality/wallet_functionality/app/src/main/java/com/bravoromeo/wallet_functionality/repositories/google_wallet/google-walletobjects-v1-rev_20230821-java.jar"))
+
+    //Visual Effects for the composable UI
+    //implementation("com.google.accompanist:accompanist-coil:0.23.0") for image loading, not necessary for the moment
+    implementation("com.google.accompanist:accompanist-pager:0.23.0")
 }

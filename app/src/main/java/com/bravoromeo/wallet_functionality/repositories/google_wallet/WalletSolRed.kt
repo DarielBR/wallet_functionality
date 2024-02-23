@@ -19,7 +19,7 @@ class WalletSolRed {
     private val googleAuthorization = GoogleAuthorization()
     private val walletApiConfig = WalletApiConfig()
 
-    private val solRedClassSuffix = "solred_loyalty_1"
+    private val solRedClassSuffix = "solred_loyalty_2"
     private val classEndpoint = "loyaltyClass"
     private val objectEndpoint = "loyaltyObject"
 
@@ -280,7 +280,7 @@ class WalletSolRed {
             "hexBackgroundColor": "#024975",
             "heroImage": {
                 "sourceUri": {
-                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/solred_hero.png"
+                    "uri": "https://raw.githubusercontent.com/DarielBR/wallet_functionality/master/online_resources/solred_2_hero.png"
                 },
                 "contentDescription": {
                     "defaultValue": {

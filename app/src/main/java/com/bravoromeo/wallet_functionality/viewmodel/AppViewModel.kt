@@ -179,7 +179,7 @@ class AppViewModel (
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun updateSolRedBalanceCardClass(context: Context){
         viewModelScope.launch {
-            walletSolRed.updateSolRedClass(context = context){/*TODO show message via Toast*/}
+            walletSolRed.createSolRedClass(context = context){/*TODO show message via Toast*/}
         }
     }
 
@@ -227,6 +227,10 @@ class AppViewModel (
         viewModelScope.launch { appState = appState.copy(cardBalance = newBalance ?: 0L) }
     }
 
+    fun setCurrentCardType(newValue: Int){
+        viewModelScope.launch{ appState = appState.copy(currentCardType = newValue) }
+    }
+
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun listLoyaltyClasses(context: Context){
         viewModelScope.launch {
@@ -240,4 +244,5 @@ data class AppState (
     var isWalletAvailable: Boolean = false,
     var currentLoyaltyPassId: String = "loyalty-1234567890-",
     var cardBalance: Long = 0,
+    var currentCardType: Int = 0,
 )
