@@ -55,7 +55,9 @@ fun BalanceTextBox(
             onValueChange = {viewModel?.onCardBalanceChange(it.toLongOrNull())
             },
             shape = MaterialTheme.shapes.small,
-            visualTransformation = EuroVisualTransformation(),
+            visualTransformation =
+                if (viewModel?.appState?.currentCardType == 0) EuroVisualTransformation()
+                else VisualTransformation.None,
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
             prefix = { Text(text = "Balance: ") },
             colors = OutlinedTextFieldDefaults.colors(

@@ -19,7 +19,7 @@ class WalletSolRed {
     private val googleAuthorization = GoogleAuthorization()
     private val walletApiConfig = WalletApiConfig()
 
-    private val solRedClassSuffix = "solred_loyalty_2"
+    private val solRedClassSuffix = "solred_loyalty_"//wrongly set for safety.
     private val classEndpoint = "loyaltyClass"
     private val objectEndpoint = "loyaltyObject"
 
@@ -180,9 +180,10 @@ class WalletSolRed {
      * @throws HttpException for Http requests to the API Endpoint.
      */
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
-    fun updateSolRedCad(
+    fun updateSolRedCard(
         cardId: String,
         balance: Int,
+        solredLoyaltyClass: Int,
         context: Context,
         onResult: (String) -> Unit
     ){
@@ -211,7 +212,7 @@ class WalletSolRed {
 
         //Create Json structure for the genericClass
         val solRedCardId = "${walletApiConfig.issuerID}.$cardId"
-        val solRedCardJson = createSolRedCardJson(cardId = cardId, balance = balance)
+        val solRedCardJson = createSolRedCardJson(cardId = cardId, balance = balance, solredLoyaltyClass = solredLoyaltyClass)
         //Http request wont be allowed in the main thread.
         GlobalScope.launch(Dispatchers.IO){
             try {
@@ -259,7 +260,7 @@ class WalletSolRed {
             "id": "${walletApiConfig.issuerID}.$solRedClassSuffix",
             "issuerName": "REPSOL",
             "reviewStatus": "UNDER_REVIEW",
-            "programName": "SolRed Balance Card",
+            "programName": "SolRed Points Card",
             "multipleDevicesAndHoldersAllowedStatus": "ONE_USER_ALL_DEVICES",
             "enableSmartTap": 1,
             "redemptionIssuers": ['${walletApiConfig.issuerID}'],
@@ -293,7 +294,7 @@ class WalletSolRed {
         """.trimIndent()
     }
 
-    fun createSolRedCardUnsignedJWT(cardId: String, balance: Int): String {
+    fun createSolRedCardUnsignedJWT(cardId: String, balance: Int, solredLoyaltyClass: Int): String {
         return """
         {
           "iss": "dbombinorevuelta@gmail.com",
@@ -302,7 +303,7 @@ class WalletSolRed {
           "iat": "${Date().time / 1000L}",
           "origins": ["www.diusframi.es"],
           "payload": {
-            "loyaltyObjects": [${createSolRedCardJson(cardId = cardId, balance = balance)}]
+            "loyaltyObjects": [${createSolRedCardJson(cardId = cardId, balance = balance, solredLoyaltyClass = solredLoyaltyClass)}]
           }
         }
         """
@@ -310,12 +311,13 @@ class WalletSolRed {
 
     private fun createSolRedCardJson(
         cardId: String,
-        balance: Int? = null
+        balance: Int? = null,
+        solredLoyaltyClass: Int,
     ): String{
-        return """
+        return if(solredLoyaltyClass == 0) """
         {
             "id": "${walletApiConfig.issuerID}.$cardId",
-            "classId": "${walletApiConfig.issuerID}.$solRedClassSuffix",
+            "classId": "${walletApiConfig.issuerID}.$solRedClassSuffix${solredLoyaltyClass + 1}",
             "state": "ACTIVE",
             "loyaltyPoints": {
                 "balance":{
@@ -348,6 +350,40 @@ class WalletSolRed {
                 }
             ]
         }            
+        """.trimIndent()
+        else """
+        {
+            "id": "${walletApiConfig.issuerID}.$cardId",
+            "classId": "${walletApiConfig.issuerID}.$solRedClassSuffix${solredLoyaltyClass + 1}",
+            "state": "ACTIVE",
+            "loyaltyPoints": {
+                "balance":{
+                    "int": $balance
+                },
+                "localizedLabel": {
+                    "defaultValue": {
+                        "language": "es-ES",
+                        "value": "Balance"
+                    }
+                }
+            },
+            "barcode": {
+                "type": "QR_CODE",
+                "value": "$cardId",
+                "alternateText": "$cardId"
+            },
+            "groupingInfo": {
+                "sortIndex": 1,
+                "groupingId": "solred_loyalty_01"
+            },
+            "textModulesData": [
+                {
+                    "header": "Balance",
+                    "body": $balance, 
+                    "id": "balance"
+                }
+            ]
+        }
         """.trimIndent()
     }
     /*endregion*/
