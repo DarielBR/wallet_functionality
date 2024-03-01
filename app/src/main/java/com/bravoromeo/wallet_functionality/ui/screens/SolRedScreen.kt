@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -88,10 +89,39 @@ fun SolRedScreen(
             }
 
             //Code snippet below is for testing purposes only
+            /*val testCardId = "HeJNd93HK8Ycvs0T1TXKr"
             Button(
                 onClick = {
                     if (context != null){
-                        viewModel?.updateRedSolCard(cardId = "e9gItv1eZ9FRWTbENzZnt", balance = (viewModel.appState.cardBalance * 1000L).toInt(), context = context)
+                        viewModel?.sendMessageToSolRedCard(
+                            cardId = testCardId,//"e9gItv1eZ9FRWTbENzZnt",
+                            context = context
+                        )
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 1.dp
+                ),
+                modifier = modifier
+                    .padding(top = 8.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Image(imageVector = Icons.Default.Send, contentDescription = "", modifier = modifier.padding(end = 8.dp))
+                    Text(text = "Enviar mensaje a SolRed Card") }
+            }
+            Button(
+                onClick = {
+                    if (context != null){
+                        viewModel?.updateRedSolCard(
+                            cardId = testCardId,//"e9gItv1eZ9FRWTbENzZnt",
+                            balance = 10,//(viewModel.appState.cardBalance * 10000000L).toInt(),//10 EUR
+                            context = context
+                        )
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -130,7 +160,7 @@ fun SolRedScreen(
                 ){
                     Image(imageVector = Icons.Default.Settings, contentDescription = "", modifier = modifier.padding(end = 8.dp))
                     Text(text = "Modificar SolRed Class") }
-            }
+            }*/
         }
     }
 }

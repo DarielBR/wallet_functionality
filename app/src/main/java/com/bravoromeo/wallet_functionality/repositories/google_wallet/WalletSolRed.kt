@@ -14,6 +14,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.Date
+import kotlin.random.Random
 
 class WalletSolRed {
     private val googleAuthorization = GoogleAuthorization()
@@ -60,7 +61,7 @@ class WalletSolRed {
 
         //Create Json structure for the genericClass
         val classId = "${walletApiConfig.issuerID}.$solRedClassSuffix"
-        val classJson = createClassJson()
+        val classJson = ""//createClassJson("")
         //Same as before, http request wont be allowed in the main thread.
         GlobalScope.launch(Dispatchers.IO){
             try {
@@ -106,6 +107,7 @@ class WalletSolRed {
      */
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun updateSolRedClass(
+        classIdSuffix: String,
         context: Context,
         onResult: (String) -> Unit
     ){
@@ -133,8 +135,8 @@ class WalletSolRed {
             .build()
 
         //Create Json structure for the genericClass
-        val classId = "${walletApiConfig.issuerID}.$solRedClassSuffix"
-        val classJson = createClassJson()
+        val classId = "${walletApiConfig.issuerID}.$solRedClassSuffix$classIdSuffix"
+        val classJson = createClassJson(classIdSuffix = classIdSuffix)
         //Http request wont be allowed in the main thread.
         GlobalScope.launch(Dispatchers.IO){
             try {
@@ -251,13 +253,81 @@ class WalletSolRed {
         }
     }
 
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun addMessageToSolRedCard(
+        messageJSON: String? = null,
+        cardId: String,
+        context: Context,
+        onResult: (String) -> Unit
+    ){
+        val message: String = messageJSON ?: createMessage(
+            messageId = "msg_solred_${cardId}_",
+            messageBody = "Card Message Body."
+        )
+        val solRedCardId= "${walletApiConfig.issuerID}.$cardId"
+
+        val inputStream = googleAuthorization.getInputStream(context)
+        val googleCredentials: GoogleCredentials?
+        if (inputStream != null) {
+            googleCredentials = googleAuthorization.createGoogleCredentials(inputStream)
+        } else {
+            onResult.invoke("Process failure while creating Google Credentials.")
+            Log.e("Key.Json file", "inputStream is not loading key.json content.")
+            return
+        }
+        val httpClient = OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val accessToken = googleCredentials.accessToken.tokenValue
+                val newRequest = chain.request().newBuilder()
+                    .header("Authorization", "Bearer $accessToken")
+                    .build()
+                chain.proceed(newRequest)
+            }
+            .build()
+
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                val getRequest = Request.Builder()
+                    .url("${walletApiConfig.baseApiRESTUrl}/$objectEndpoint/$solRedCardId")
+                    .get()
+                    .build()
+                httpClient.newCall(getRequest).execute().use { getResponse ->
+                    if (getResponse.isSuccessful){//Loyalty class exists: message can be send.
+                        val postRequest = Request.Builder()
+                            .url("${walletApiConfig.baseApiRESTUrl}/loyaltyObject/$solRedCardId/addMessage")
+                            .post(message.toRequestBody("application/json".toMediaTypeOrNull()))
+                            .build()
+                        httpClient.newCall(postRequest).execute().use { postResponse ->
+                            if (postResponse.isSuccessful){
+                                onResult.invoke("Success on adding message to pass $solRedCardId")
+                                Log.e("Google Wallet REST API", "Success on adding message to pass: ${postResponse.networkResponse}.")
+                                return@launch
+                            } else {
+                                onResult.invoke("Failure while adding message to pass $solRedCardId")
+                                Log.e("Google Wallet REST API", "failure while adding message to pass: ${postResponse.networkResponse}.")
+                                return@launch
+                            }
+                        }
+                    }else{
+                        onResult.invoke("Pass $solRedCardId do not exists for the Issuer ${walletApiConfig.issuerID}'s account.")
+                        Log.e("Google Wallet REST API", "pass do not exists.")
+                        return@launch
+                    }
+                }
+            }catch (e: HttpException){
+                onResult.invoke("Failure while adding message to Loyalty Pass $solRedCardId.")
+                Log.e("Google Wallet REST API", "add message error: ${e.localizedMessage}")
+            }
+        }
+    }
+
     /*endregion*/
 
     /*region Json Functionality*/
-    private fun createClassJson(): String{
+    private fun createClassJson(classIdSuffix: String): String{
         return """
         {
-            "id": "${walletApiConfig.issuerID}.$solRedClassSuffix",
+            "id": "${walletApiConfig.issuerID}.$solRedClassSuffix$classIdSuffix",
             "issuerName": "REPSOL",
             "reviewStatus": "UNDER_REVIEW",
             "programName": "SolRed Points Card",
@@ -289,6 +359,25 @@ class WalletSolRed {
                         "value": "HERO_IMAGE_DESCRIPTION"
                     }
                 }
+            },
+            "linksModuleData": {
+                "uris": [
+                    {
+                        "uri": "https://www.repsol.es/autonomos-y-empresas/solred/",
+                        "id": "uri_loyalty_2_01",
+                        "description": "Sitio web"
+                    },
+                    {
+                        "uri": "tel:6505555555",
+                        "id": "uri_loyalty_2_02",
+                        "description": "Número de contacto"
+                    },
+                    {
+                        "uri": "mailto:johndoe@email.moon",
+                        "id": "uri_loyalty_2_03",
+                        "description": "Correo electrónico"
+                    }
+                ]
             }
         }
         """.trimIndent()
@@ -382,7 +471,49 @@ class WalletSolRed {
                     "body": $balance, 
                     "id": "balance"
                 }
-            ]
+            ],
+            "infoModuleData": {
+                "labelValueRows": [
+                    {
+                        "columns": [
+                            {
+                                "label": "Card Owner",
+                                "value": "John Doe"
+                            },
+                            {
+                                "label": "Card Number",
+                                "value": "${cardId.uppercase()}"
+                            },
+                            {
+                                "label": "Ventajas",
+                                "value": "💶 Disfruta de descuentos y promociones exclusivos en carburante y otros productos y servicios.\n
+                                🚙 Paga en autopistas, talleres y en nuestras estaciones de servicio de manera fácil y rápida. Ahora con mayor seguridad solicitando tu tarjeta con PIN.\n
+                                💳 Con Mi Solred, puedes gestionar tus tarjetas Solred y visualizar todos tus movimientos."
+                            }
+                        ]
+                    }
+                ],
+                "showLastUpdateTime": true
+            }
+        }
+        """.trimIndent()
+    }
+
+    private fun createMessage(
+        messageId: String,
+        messageBody: String
+    ): String{
+        val extendedMessageId = messageId + (1..10)
+            .map { "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".random(Random) }
+            .joinToString("")
+        return """
+        {
+            "message": {
+                "header": "CARD MESSAGE HEADER",
+                "body": "$messageBody",
+                "id": "$extendedMessageId",
+                "messageType": "TEXT"
+            }
         }
         """.trimIndent()
     }

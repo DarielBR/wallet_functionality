@@ -141,7 +141,7 @@ class AppViewModel (
     fun saveSolRedCardToWallet(context: Context){
         val unsignedJWT = walletSolRed.createSolRedCardUnsignedJWT(
             cardId = createRandomQRCode(),
-            balance =   if(appState.currentCardType == 0) (appState.cardBalance * 10000L).toInt()
+            balance =   if(appState.currentCardType == 0) (appState.cardBalance * 1000L).toInt()
                         else appState.cardBalance.toInt(),
             solredLoyaltyClass = appState.currentCardType
         )
@@ -184,7 +184,14 @@ class AppViewModel (
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun updateSolRedBalanceCardClass(context: Context){
         viewModelScope.launch {
-            walletSolRed.updateSolRedClass(context = context){/*TODO show message via Toast*/}
+            walletSolRed.updateSolRedClass(classIdSuffix = "2", context = context){/*TODO show message via Toast*/}
+        }
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun sendMessageToSolRedCard(cardId: String, context: Context){
+        viewModelScope.launch {
+            walletSolRed.addMessageToSolRedCard(cardId = cardId, context = context){}
         }
     }
 
